@@ -8,11 +8,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.Button;
 import android.widget.LinearLayout;
 
 //import com.ogaclejapan.smarttablayout.SmartTabLayout;
@@ -20,8 +15,6 @@ import android.widget.LinearLayout;
 //import com.ogaclejapan.smarttablayout.utils.v13.FragmentPagerItems;
 
 import com.astuetz.PagerSlidingTabStrip;
-
-import java.util.ArrayList;
 
 public class FluidPlayActivity extends AppCompatActivity {
 
@@ -34,7 +27,7 @@ public class FluidPlayActivity extends AppCompatActivity {
 
         app = (MyApplication)this.getApplication();
         Bitmap bitmap = app.getObj();
-        MainActivity.PictureButton select = app.getSelect();
+        MenuActivity.PictureButton select = app.getSelect();
 
         //流体画面を生成
         glView = new MainGlView(this, bitmap, select, null);

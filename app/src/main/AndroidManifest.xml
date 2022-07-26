@@ -10,18 +10,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity android:name=".CreateDrawActivity"></activity>
-        <activity android:name=".CreateActivity" />
+        <activity android:name=".CreateDrawFluidActivity"></activity>
+        <activity android:name=".CreateFluidTouchWorldActivity" />
         <activity
-            android:name=".InformationActivity"
+            android:name=".AppInformationActivity"
             android:label="@string/title_activity_information"
             android:theme="@style/NoActionBar" />
-        <activity android:name=".PictureDialogActivity" />
+        <activity android:name=".TrimmingPictureActivity" />
         <activity android:name=".CreateSelectionActivity" />
         <activity android:name=".FluidPlayActivity" />
-        <activity android:name=".FluidDesignActivity" />
-        <activity android:name=".PictureActivity" />
-        <activity android:name=".MainActivity" />
+        <activity android:name=".CreateFluidWorldMenuActivity" />
+        <activity android:name=".SelectPictureActivity" />
+        <activity android:name=".MenuActivity" />
         <activity android:name=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

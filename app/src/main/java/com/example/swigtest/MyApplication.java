@@ -2,7 +2,6 @@ package com.example.swigtest;
 
 import android.app.Application;
 import android.graphics.Bitmap;
-import android.util.Log;
 
 import com.google.fpl.liquidfun.Vec2;
 
@@ -12,7 +11,7 @@ import java.util.ArrayList;
 public class MyApplication extends Application {
     private final String TAG = "APPLICATION";
     private Bitmap obj;
-    private MainActivity.PictureButton select;
+    private MenuActivity.PictureButton select;
     private ArrayList<Vec2> touchList = new ArrayList<Vec2>();
 
     /*
@@ -41,11 +40,11 @@ public class MyApplication extends Application {
         obj = null;
     }
 
-    public MainActivity.PictureButton getSelect() {
+    public MenuActivity.PictureButton getSelect() {
         return select;
     }
 
-    public void setSelect(MainActivity.PictureButton select) {
+    public void setSelect(MenuActivity.PictureButton select) {
         this.select = select;
     }
 

@@ -7,6 +7,9 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 
+/*
+ * （現在仕様としてなし）
+ */
 public class CreateSelectionActivity extends AppCompatActivity {
 
     @Override

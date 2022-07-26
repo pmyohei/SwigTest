@@ -8,7 +8,10 @@ import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 
-public class MainActivity extends AppCompatActivity {
+/*
+ * メニュー画面
+ */
+public class MenuActivity extends AppCompatActivity {
 
     private static final int RESULT_PICK_IMAGEFILE = 1000;
     private Uri uri;
@@ -46,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         create.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), CreateDrawActivity.class);
+                Intent intent = new Intent(v.getContext(), CreateDrawFluidActivity.class);
                 startActivity(intent);
             }
         });
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         sub_create.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), CreateActivity.class);
+                Intent intent = new Intent(v.getContext(), CreateFluidTouchWorldActivity.class);
                 startActivity(intent);
             }
         });
@@ -74,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         sub_create.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), CreateDrawActivity.class);
+                Intent intent = new Intent(v.getContext(), CreateDrawFluidActivity.class);
                 startActivity(intent);
             }
         });
@@ -94,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //Information画面へ遷移
-                Intent intent = new Intent(view.getContext(), InformationActivity.class);
+                Intent intent = new Intent(view.getContext(), AppInformationActivity.class);
                 startActivity(intent);
             }
         });
@@ -122,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             //Pictureアクティビティへ遷移
-            Intent intent = new Intent(view.getContext(), PictureActivity.class);
+            Intent intent = new Intent(view.getContext(), SelectPictureActivity.class);
             intent.putExtra("PictureButton", pictureButton);
             startActivity(intent);
         }

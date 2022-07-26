@@ -7,10 +7,11 @@ import android.animation.AnimatorSet;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
+/*
+ * スプラッシュイメージの表示画面
+ */
 public class SplashActivity extends AppCompatActivity {
 
     @Override
@@ -30,7 +31,7 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animator animation) {
                 //アニメーション終了時に画面遷移
-                startActivity(new Intent(imageView.getContext(), MainActivity.class));
+                startActivity(new Intent(imageView.getContext(), MenuActivity.class));
             }
         });
     }

@@ -1,24 +1,17 @@
 package com.example.swigtest;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 
-import java.io.FileDescriptor;
-import java.io.IOException;
+/*
+ * 画像選択画面
+ */
+public class SelectPictureActivity extends AppCompatActivity {
 
-public class PictureActivity extends AppCompatActivity {
-
-    private MainActivity.PictureButton select;
+    private MenuActivity.PictureButton select;
     private static final int RESULT_PICK_IMAGEFILE = 1000;
     private static final int RESULT_TRIMMING = 1001;
 
@@ -28,7 +21,7 @@ public class PictureActivity extends AppCompatActivity {
 
         //押下されたボタンを取得
         Intent intent = getIntent();
-        select = (MainActivity.PictureButton)intent.getSerializableExtra("PictureButton");
+        select = (MenuActivity.PictureButton)intent.getSerializableExtra("PictureButton");
 
         //端末の画像ギャラリーを表示
         this.displayGallery();
@@ -68,7 +61,7 @@ public class PictureActivity extends AppCompatActivity {
 
                 //ここで、トリミング選択ダイアログをコールできないため、
                 //ダイアログコール用のアクティビティを介する。
-                Intent intent = new Intent(this, PictureDialogActivity.class);
+                Intent intent = new Intent(this, TrimmingPictureActivity.class);
                 Bundle b = new Bundle();
                 b.putParcelable("uri", uri);
                 intent.putExtras(b);

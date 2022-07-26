@@ -13,9 +13,12 @@ import android.util.Log;
 import java.io.FileDescriptor;
 import java.io.IOException;
 
-public class PictureDialogActivity extends AppCompatActivity {
+/*
+ * 画像トリミング画面
+ */
+public class TrimmingPictureActivity extends AppCompatActivity {
 
-    private MainActivity.PictureButton select;
+    private MenuActivity.PictureButton select;
     private static final int RESULT_FLUID_DESIGN = 1000;
 
     @Override
@@ -24,7 +27,7 @@ public class PictureDialogActivity extends AppCompatActivity {
 
         //呼び出し元からデータを取得
         Intent intent = getIntent();
-        select = (MainActivity.PictureButton)intent.getSerializableExtra("PictureButton");
+        select = (MenuActivity.PictureButton)intent.getSerializableExtra("PictureButton");
         Bundle b = intent.getExtras();
 
         //トリミング用ダイアログを生成
@@ -51,7 +54,7 @@ public class PictureDialogActivity extends AppCompatActivity {
         return image;
     }
 
-    /**
+    /*
      * トリミング確定後処理
      */
     public void trimming_completed(Bitmap image){
@@ -62,11 +65,11 @@ public class PictureDialogActivity extends AppCompatActivity {
         app.setSelect(select);
 
         //Intent intent = new Intent(this, FluidPlayActivity.class);
-        Intent intent = new Intent(this, FluidDesignActivity.class);
+        Intent intent = new Intent(this, CreateFluidWorldMenuActivity.class);
         startActivityForResult(intent, RESULT_FLUID_DESIGN);
     }
 
-    /**
+    /*
      * トリミング-戻るボタン押下時処理
      */
     public void trimming_return(){

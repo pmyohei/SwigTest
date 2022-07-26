@@ -1,22 +1,17 @@
 package com.example.swigtest;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.Image;
 import android.net.Uri;
 import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
@@ -75,7 +70,7 @@ public class DialogPicture extends DialogFragment {
 
         Bitmap bmp = null;
         try {
-            PictureDialogActivity activity = (PictureDialogActivity) getActivity();
+            TrimmingPictureActivity activity = (TrimmingPictureActivity) getActivity();
             bmp = activity.getBitmapFromUri(uri);
         } catch (IOException e) {
             e.printStackTrace();
@@ -115,7 +110,7 @@ public class DialogPicture extends DialogFragment {
         //dialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
 
         //呼び出し元のアクティビティを取得
-        final PictureDialogActivity activity = (PictureDialogActivity) getActivity();
+        final TrimmingPictureActivity activity = (TrimmingPictureActivity) getActivity();
 
         //OK
         dialog.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
@@ -139,7 +134,7 @@ public class DialogPicture extends DialogFragment {
     @Override
     public void onCancel(DialogInterface dialog) {
         //other押下時と同じ動作をさせる
-        PictureDialogActivity activity = (PictureDialogActivity) getActivity();
+        TrimmingPictureActivity activity = (TrimmingPictureActivity) getActivity();
         activity.trimming_return();
     }
 }

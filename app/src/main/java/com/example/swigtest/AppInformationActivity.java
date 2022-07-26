@@ -9,7 +9,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-public class InformationActivity extends AppCompatActivity {
+/*
+ * アプリケーション情報画面
+ */
+public class AppInformationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -1,16 +1,12 @@
 package com.example.swigtest;
 
 import android.content.Intent;
-import android.content.res.Resources;
-import android.content.res.XmlResourceParser;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
@@ -21,7 +17,11 @@ import com.google.fpl.liquidfun.Vec2;
 
 import java.util.ArrayList;
 
-public class FluidDesignActivity extends AppCompatActivity {
+/*
+ * 流体画面
+ *   レイヤー２：操作メニュー用画面
+ */
+public class CreateFluidWorldMenuActivity extends AppCompatActivity {
 
     private MainGlView glView;
     private MyApplication app;
@@ -42,18 +42,14 @@ public class FluidDesignActivity extends AppCompatActivity {
 
         app = (MyApplication)this.getApplication();
         Bitmap bitmap                     = app.getObj();
-        MainActivity.PictureButton select = app.getSelect();
+        MenuActivity.PictureButton select = app.getSelect();
 
-        if(select == MainActivity.PictureButton.CreateDraw){
-            ArrayList<Vec2> touchList = app.getTouchList();
-
-            //流体画面を生成
-            glView = new MainGlView(this, bitmap, select, touchList);
-
-        }else{
-            //流体画面を生成
-            glView = new MainGlView(this, bitmap, select, null);
+        ArrayList<Vec2> touchList = null;
+        if(select == MenuActivity.PictureButton.CreateDraw){
+            touchList = app.getTouchList();
         }
+        //流体画面を生成
+        glView = new MainGlView(this, bitmap, select,  touchList );
 
         setContentView(R.layout.activity_fluid_design);
         LinearLayout root = findViewById(R.id.gl_view_root);
@@ -120,7 +116,7 @@ public class FluidDesignActivity extends AppCompatActivity {
         });
 
         //break指定時、タッチ用物体を生成
-        if( select == MainActivity.PictureButton.Break ){
+        if( select == MenuActivity.PictureButton.Break ){
             glView.getRenderer().reqEntryFlickObject(100, 100, 0, 100, 10, FlickFigureFragment.FlickShape.BOX);
         }
     }

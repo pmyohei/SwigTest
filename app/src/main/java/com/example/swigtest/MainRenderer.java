@@ -14,7 +14,6 @@ import com.google.fpl.liquidfun.Body;
 import com.google.fpl.liquidfun.BodyDef;
 import com.google.fpl.liquidfun.BodyType;
 import com.google.fpl.liquidfun.CircleShape;
-import com.google.fpl.liquidfun.FixtureDef;
 import com.google.fpl.liquidfun.ParticleFlag;
 import com.google.fpl.liquidfun.ParticleGroup;
 import com.google.fpl.liquidfun.ParticleGroupDef;
@@ -160,7 +159,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
     /* その他制御 */
     private boolean mMode = false;                     //createなら、trueに変える
-    private MainActivity.PictureButton select_btn;
+    private MenuActivity.PictureButton select_btn;
     Random rundom;
 
     /* テスト用 */
@@ -227,7 +226,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
     /**
      * コンストラクタ
      */
-    public MainRenderer(MainGlView view, Bitmap bmp, MainActivity.PictureButton select, ArrayList<Vec2> touchList) {
+    public MainRenderer(MainGlView view, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         this.view = view;
         this.select_bmp = bmp;
         this.select_btn = select;
@@ -239,28 +238,28 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
 
         //!リファクタリング
-        if(select == MainActivity.PictureButton.CreateDraw){
-            this.select_btn = MainActivity.PictureButton.Soft;
-            select          = MainActivity.PictureButton.Soft;
+        if(select == MenuActivity.PictureButton.CreateDraw){
+            this.select_btn = MenuActivity.PictureButton.Soft;
+            select          = MenuActivity.PictureButton.Soft;
         }
 
         //選択されたボタン(パーティクルの質)毎の設定
-        if( select == MainActivity.PictureButton.Soft ){
+        if( select == MenuActivity.PictureButton.Soft ){
             this.setParticleFlg = ParticleFlag.elasticParticle;
             this.setParticleRadius = 0.2f;
             this.setParticleLifetime = 0;
 
-        }else if( select == MainActivity.PictureButton.Hard ){
+        }else if( select == MenuActivity.PictureButton.Hard ){
             this.setParticleFlg = ParticleFlag.elasticParticle;
             this.setParticleRadius = 0.5f;
             this.setParticleLifetime = 0;
 
-        }else if( select == MainActivity.PictureButton.VeryHard ){
+        }else if( select == MenuActivity.PictureButton.VeryHard ){
             this.setParticleFlg = ParticleFlag.elasticParticle;
             this.setParticleRadius = 1.0f;
             this.setParticleLifetime = 0;
 
-        }else if( select == MainActivity.PictureButton.Break ){
+        }else if( select == MenuActivity.PictureButton.Break ){
             this.setParticleFlg = ParticleFlag.waterParticle;
             this.setParticleRadius = 0.2f;
             this.setParticleLifetime = 6;
@@ -704,7 +703,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         //境界粒子を保持
         ArrayList<Integer> border = new ArrayList<Integer>();
-        if(select_btn != MainActivity.PictureButton.Break) {
+        if(select_btn != MenuActivity.PictureButton.Break) {
             ArrayList<Integer> line = new ArrayList<Integer>();
 
             //行数分ループ
@@ -782,7 +781,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         pgd.setLifetime(this.setParticleLifetime);
 
         //!リファクタリング
-        if( select_btn == MainActivity.PictureButton.Break ){
+        if( select_btn == MenuActivity.PictureButton.Break ){
             //生成位置をランダムに
             int offsetx = rundom.nextInt(rangeCreateBreakX);
             int offsety = rundom.nextInt(rangeCreateBreakY);
@@ -979,7 +978,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         this.menuDownVelocity = new Vec2(0, -(speed));
 
         //Break以外
-        if(select_btn != MainActivity.PictureButton.Break){
+        if(select_btn != MenuActivity.PictureButton.Break){
             this.addBox(gl, positionMax[0], 1, positionMid[0], positionMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //上の壁
         }
 
@@ -1038,7 +1037,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             this.addSoftBody(gl, 4, 4, positionMid[0], positionMid[1], this.setParticleRadius, R.drawable.kitune_tanuki2);
 
             //Break以外は再生成時に演出を入れる
-            if( select_btn != MainActivity.PictureButton.Break ) {
+            if( select_btn != MenuActivity.PictureButton.Break ) {
                 //パーティクルと重複する物体を生成(再生成演出用)
                 this.addBox(gl, 4, 4, positionMid[0], positionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.OVERLAP);
             }
@@ -1048,7 +1047,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         } else if (regeneration == RegenerationState.OVERLAP) {
 
-            if( select_btn != MainActivity.PictureButton.Break ) {
+            if( select_btn != MenuActivity.PictureButton.Break ) {
                 //重複物体はすぐに削除する
                 this.world.destroyBody(overlapBody);
             }
@@ -1066,7 +1065,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         /* 粒子がない場合、何もしない */
         if (pg.getParticleCount() == 0) {
             //Breakなら再生成
-            if (select_btn == MainActivity.PictureButton.Break) {
+            if (select_btn == MenuActivity.PictureButton.Break) {
                 regeneration = RegenerationState.CREATE;
             }
 
@@ -1080,7 +1079,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
 
         /* パーティクルの描画更新 */
-        if (select_btn == MainActivity.PictureButton.Break) {
+        if (select_btn == MenuActivity.PictureButton.Break) {
             this.updateParticleBreakDraw(gl, ps, pd);
         }else{
             this.updateParticleUnBreakDraw(gl, ps, pd);
@@ -1963,17 +1962,17 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
     /**
      * メニュービュー位置情報の設定
      */
-    public void reqSetMenuSize(FluidDesignActivity.FluidMenuKind kind, float top, float left, float right, float bottom, int ani_duration ){
+    public void reqSetMenuSize(CreateFluidWorldMenuActivity.FluidMenuKind kind, float top, float left, float right, float bottom, int ani_duration ){
 
         //メニュー本体のビュー位置情報を保持
-        if( kind == FluidDesignActivity.FluidMenuKind.CONTENTS){
+        if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.CONTENTS){
             this.menuContentsTop = top;
             this.menuContentsLeft = left;
             this.menuContentsRight = right;
             this.menuContentsBottom = bottom;
             this.menuUpAniDuration = ani_duration;
 
-        }else if( kind == FluidDesignActivity.FluidMenuKind.INIT){
+        }else if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.INIT){
             this.menuInitTop = top;
             this.menuInitLeft = left;
             this.menuInitRight = right;

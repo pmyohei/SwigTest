@@ -12,7 +12,10 @@ import com.google.fpl.liquidfun.Vec2;
 
 import java.util.ArrayList;
 
-public class CreateDrawActivity extends AppCompatActivity {
+/*
+ * 流体描画画面
+ */
+public class CreateDrawFluidActivity extends AppCompatActivity {
 
     PaintView mPaintView;
     private MyApplication app;
@@ -56,10 +59,10 @@ public class CreateDrawActivity extends AppCompatActivity {
                 //共通クラスにBitmapを格納
                 //(アクティビティ間の画像はサイズが大きいとエラーで落ちるため、共通クラスを介する)
                 app.setObj(bmp);
-                app.setSelect(MainActivity.PictureButton.CreateDraw);
+                app.setSelect(MenuActivity.PictureButton.CreateDraw);
                 app.setTouchList(touchList);
 
-                Intent intent = new Intent(view.getContext(), FluidDesignActivity.class);
+                Intent intent = new Intent(view.getContext(), CreateFluidWorldMenuActivity.class);
                 startActivity(intent);
             }
         });
