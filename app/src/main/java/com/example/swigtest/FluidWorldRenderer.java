@@ -35,7 +35,10 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
-public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListener {
+/*
+ *
+ */
+public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchListener {
 
     /* LiquidFun ロード */
     static {
@@ -44,43 +47,43 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
     }
 
     /* 物理関連 */
-    private World world = null;
+    private World mWorld = null;
 
     //パーティクル
-    private ParticleSystem mPs;
-    private ParticleData particleData;
-    private RegenerationState regeneration;
-    private long setParticleFlg;
-    private float setParticleRadius;
-    private int setParticleLifetime;
-    ParticleTouchData particleTouchData = new ParticleTouchData( -1, -1, ParticalTouchStatus.Extern, 0xFFFF, 0xFFFF );
+    private ParticleSystem mParticleSystem;
+    private ParticleData mParticleData;
+    private RegenerationState mRegenerationState;
+    private long mSetParticleFlg;
+    private float mSetParticleRadius;
+    private int mSetParticleLifetime;
+    ParticleTouchData mParticleTouchData = new ParticleTouchData( -1, -1, ParticalTouchStatus.Extern, 0xFFFF, 0xFFFF );
 
     //静的物体
-    private HashMap<Long, BodyData> mapBodyData = new HashMap<Long, BodyData>();
-    private HashMap<Long, BodyData> mapTouchBodyData = new HashMap<Long, BodyData>();
-    private long bodyDataId = 1;
+    private HashMap<Long, BodyData> mMapBodyData = new HashMap<Long, BodyData>();
+    private HashMap<Long, BodyData> mMapTouchBodyData = new HashMap<Long, BodyData>();
+    private long mBodyDataId = 1;
 
-    private TouchObjectData TouchObjectData = null;
+    private TouchObjectData mTouchObjectData = null;
     private boolean mTouchFlg = false;
-    private int shapeTranceCount = 0;
+    private int mShapeTranceCount = 0;
 
     private static final int SHAPE_TRANCE_VALUE = 1000;
 
     //フリック物体
-    private FlickObjectData flickObjectData = null;
-    private HashMap<Long, BodyData> mapFlickBodyData = new HashMap<Long, BodyData>();
-    private FlickControlFragment.FlickControl frickCtrlType;
+    private FlickObjectData mFlickObjectData = null;
+    private HashMap<Long, BodyData> mMapFlickBodyData = new HashMap<Long, BodyData>();
+    private FlickControlFragment.FlickControl mFrickCtrlType;
 
     //バレット
-    private boolean cannonCtrl = false;
-    private HashMap<Long, BodyData> mapCannonData = new HashMap<Long, BodyData>();
-    private ArrayList<Long> bulletDeleteList = new ArrayList<Long>();
-    private int cannonCreateCycle;
+    private boolean mCannonCtrl = false;
+    private HashMap<Long, BodyData> mMapCannonData = new HashMap<Long, BodyData>();
+    private ArrayList<Long> mBulletDeleteList = new ArrayList<Long>();
+    private int mCannonCreateCycle;
 
     /* 位置管理 */
-    private float[] positionMax;
-    private float[] positionMid;
-    private float[] positionMin;
+    private float[] mPositionMax;
+    private float[] mPositionMid;
+    private float[] mPositionMin;
 
     //Break生成位置の範囲
     private Vec2 rangeCreateBreakMin;
@@ -121,19 +124,19 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
     private boolean mGetMenuCorner = false;
 
     //アニメーションと一致するmenuの移動速度
-    private Vec2 menuUpVelocity;
-    private Vec2 menuDownVelocity;
-    private Vec2 menuVelocity;
+    private Vec2 mMenuUpVelocity;
+    private Vec2 mMenuDownVelocity;
+    private Vec2 mMenuVelocity;
 
     //menu移動制御
-    private MenuMoveControl menuMove = MenuMoveControl.NOTHING;
+    private MenuMoveControl mMenuMove = MenuMoveControl.NOTHING;
 
     /* OpenGL */
-    private MainGlView view;
-    private Bitmap select_bmp;
+    private MainGlView mMainGlView;
+    private Bitmap mUserSelectBmp;
     private GLInitStatus glInitStatus = GLInitStatus.PreInit;
 
-    private HashMap<Integer, Integer> mapResIdToTextureId = new HashMap<Integer, Integer>();
+    private HashMap<Integer, Integer> mMapResIdToTextureId = new HashMap<Integer, Integer>();
 
     PlistDataManager mPlistManage;
 
@@ -141,7 +144,6 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
     private ArrayList<Integer> drawGroupParIndex = new ArrayList<Integer>();    //頂点座標配列
     private ArrayList<Vec2> drawGroupUv = new ArrayList<Vec2>();                 //UV座標配列
     private int drawVerNum;                                                     //描画対象の頂点数
-
 
     /* 定数 */
     private static final float TIME_STEP = 1 / 60f; // 60 fps
@@ -159,8 +161,8 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
     /* その他制御 */
     private boolean mMode = false;                     //createなら、trueに変える
-    private MenuActivity.PictureButton select_btn;
-    Random rundom;
+    private MenuActivity.PictureButton mUserSelectHardness;
+    Random mRundom;
 
     /* テスト用 */
     private boolean testflg = false;
@@ -223,103 +225,98 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         OVERLAP       //重複
     }
 
-    /**
+    /*
      * コンストラクタ
      */
-    public MainRenderer(MainGlView view, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
-        this.view = view;
-        this.select_bmp = bmp;
-        this.select_btn = select;
+    public FluidWorldRenderer(MainGlView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
+        mMainGlView = mainGlView;
+        mUserSelectBmp = bmp;
+        mUserSelectHardness = select;
 
         //!リファクタリング
-        //bmpがnullならCreateモード
+        //bmp未指定の場合、Createモードとみなす
         if( bmp == null ){
-            this.mMode = true;
+            mMode = true;
         }
 
         //!リファクタリング
         if(select == MenuActivity.PictureButton.CreateDraw){
-            this.select_btn = MenuActivity.PictureButton.Soft;
-            select          = MenuActivity.PictureButton.Soft;
+            mUserSelectHardness = MenuActivity.PictureButton.Soft;
+            select = MenuActivity.PictureButton.Soft;
         }
 
-        //選択されたボタン(パーティクルの質)毎の設定
+        //選択された固さ(パーティクルの質)毎の設定
         if( select == MenuActivity.PictureButton.Soft ){
-            this.setParticleFlg = ParticleFlag.elasticParticle;
-            this.setParticleRadius = 0.2f;
-            this.setParticleLifetime = 0;
+            mSetParticleFlg = ParticleFlag.elasticParticle;
+            mSetParticleRadius = 0.2f;
+            mSetParticleLifetime = 0;
 
         }else if( select == MenuActivity.PictureButton.Hard ){
-            this.setParticleFlg = ParticleFlag.elasticParticle;
-            this.setParticleRadius = 0.5f;
-            this.setParticleLifetime = 0;
+            mSetParticleFlg = ParticleFlag.elasticParticle;
+            mSetParticleRadius = 0.5f;
+            mSetParticleLifetime = 0;
 
         }else if( select == MenuActivity.PictureButton.VeryHard ){
-            this.setParticleFlg = ParticleFlag.elasticParticle;
-            this.setParticleRadius = 1.0f;
-            this.setParticleLifetime = 0;
+            mSetParticleFlg = ParticleFlag.elasticParticle;
+            mSetParticleRadius = 1.0f;
+            mSetParticleLifetime = 0;
 
         }else if( select == MenuActivity.PictureButton.Break ){
-            this.setParticleFlg = ParticleFlag.waterParticle;
-            this.setParticleRadius = 0.2f;
-            this.setParticleLifetime = 6;
-
-        }else{
-            /* ありえないルート */
+            mSetParticleFlg = ParticleFlag.waterParticle;
+            mSetParticleRadius = 0.2f;
+            mSetParticleLifetime = 6;
         }
 
         //物理世界生成
-        world = new World(0, -10);
-
+        mWorld = new World(0, -10);
         //ランダム生成
-        rundom = new Random();
-
+        mRundom = new Random();
         //plist管理クラス
         mPlistManage = new PlistDataManager();
     }
 
-    /**
+    /*
      *
      */
     private void addBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = bodyDataId++;
+        long id = mBodyDataId++;
         BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        this.mapBodyData.put(id, data);
+        mMapBodyData.put(id, data);
     }
 
-    /**
+    /*
      *
      */
     private void addTouchBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = bodyDataId++;
+        long id = mBodyDataId++;
         BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        this.mapTouchBodyData.put(id, data);
+        mMapTouchBodyData.put(id, data);
     }
 
 
-    /**
+    /*
      *
      */
     private void addFlickBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = bodyDataId++;
+        long id = mBodyDataId++;
         BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        this.mapFlickBodyData.put(id, data);
+        mMapFlickBodyData.put(id, data);
     }
 
-    /**
+    /*
      *
      */
     private void addBulletBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
-        long id = bodyDataId++;
+        long id = mBodyDataId++;
         BodyData data = new BodyData(id, body, buffer, uv, drawMode, textureId);
-        this.mapCannonData.put(id, data);
+        mMapCannonData.put(id, data);
     }
 
-    /**
+    /*
      *
      */
     private void addParticleData(GL10 gl, ParticleSystem ps, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> row, ArrayList<Integer> border, int textureId) {
-        particleData = new ParticleData(0, ps, pg, particleRadius, row, border, textureId);
+        mParticleData = new ParticleData(0, ps, pg, particleRadius, row, border, textureId);
 
         //Createのみ
         if(mMode){
@@ -351,12 +348,12 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             list.add(texture);
 
             //テクスチャを追加
-            particleData.setTextureIdList(list);
+            mParticleData.setTextureIdList(list);
         }
 
     }
 
-    /**
+    /*
      *
      */
     public Body addCircle(GL10 gl, float r, float x, float y, float angle, BodyType type, float density, int resId, CreateObjectType object) {
@@ -365,7 +362,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         bodyDef.setType(type);
         bodyDef.setPosition(x, y);
         bodyDef.setAngle(angle);
-        Body body = world.createBody(bodyDef);
+        Body body = mWorld.createBody(bodyDef);
         CircleShape shape = new CircleShape();
         shape.setRadius(r);
         body.createFixture(shape, density);
@@ -387,20 +384,20 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         switch (object){
             case PLACEMENT:
-                this.addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
+                addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
                 break;
             case FLICK:
-                this.addFlickBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
+                addFlickBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
                 break;
             case BULLET:
-                this.addBulletBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
+                addBulletBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
                 break;
         }
 
         return body;
     }
 
-    /**
+    /*
      *
      */
     public Body addBox(GL10 gl,float hx, float hy, float x, float y, float angle, BodyType type, float density, int resId, BodyKind kind) {
@@ -408,7 +405,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
         bodyDef.setPosition(x, y);
-        Body body = world.createBody(bodyDef);
+        Body body = mWorld.createBody(bodyDef);
         PolygonShape shape = new PolygonShape();
         shape.setAsBox(hx, hy, 0, 0, angle);    //para 3/4：ボックスの中心
         body.createFixture(shape, density);
@@ -420,7 +417,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
                 + hx, + hy,
                 + hx, - hy,
         };
-        //FloatBuffer buffer = this.makeFloatBuffer(vertices);
+        //FloatBuffer buffer = makeFloatBuffer(vertices);
 
         //画像の四隅
         float[] uv={
@@ -429,17 +426,17 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
                 1.0f,0.0f,//右上
                 1.0f,1.0f,//右下
         };
-        //FloatBuffer uvBuffer = this.makeFloatBuffer(uv);a
+        //FloatBuffer uvBuffer = makeFloatBuffer(uv);a
 
         //テクスチャ生成
         int textureId = makeTexture(gl, resId);
 
         //種別に応じて、保存先を切り分け
         if(kind == BodyKind.FLICK){
-            this.addFlickBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+            addFlickBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         }else if(kind == BodyKind.STATIC){
-            this.addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         }else if(kind == BodyKind.MOVE){
             body.setGravityScale(0);
@@ -448,7 +445,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             //debug
             bodyDef.setPosition(x-1, y);
 
-            this.addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+            addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         }else if(kind == BodyKind.TOUCH){
             body.setGravityScale(0);
@@ -457,42 +454,40 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             //debug
             bodyDef.setPosition(x-1, y);
 
-            this.addTouchBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
+            addTouchBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
         }else if(kind == BodyKind.OVERLAP){
             overlapBody = body;
 
-        }else{
-            //do nothing
         }
 
         return body;
     }
 
 
-    /**
+    /*
      *
      */
     public void addSoftBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius,int resId) {
-        ParticleSystem ps = mPs;
+        ParticleSystem ps = mParticleSystem;
 
         Log.i("P Count", "before ps.getParticleCount=" + ps.getParticleCount());
 
         ParticleGroupDef pgd = new ParticleGroupDef();
-        this.setParticleGroupDef(pgd, hx, hy, cx, cy);
+        setParticleGroupDef(pgd, hx, hy, cx, cy);
         ParticleGroup pg = ps.createParticleGroup(pgd);
         //mPs.setMaxParticleCount(pg.getParticleCount());
 
         Log.i("P Count", "after pg.getParticleCount=" + pg.getParticleCount());
         Log.i("P Count", "after ps.getParticleCount=" + ps.getParticleCount());
 
-        for(int i = 0; i < mPs.getParticleCount(); i++){
+        for(int i = 0; i < mParticleSystem.getParticleCount(); i++){
             //Log.i("test", "i=" + i + "\tposX=\t" + mPs.getParticlePositionX(i) + "\tposY=\t" + mPs.getParticlePositionY(i));
         }
 
         //粒子を行毎に配列で保持
         ArrayList<ArrayList<Integer>> row = new ArrayList<ArrayList<Integer>>();
-        this.setParticleGroupRow(ps, pg, row);
+        setParticleGroupRow(ps, pg, row);
 
         //生成した粒子の半径
         float diameter = particleRadius * 2;
@@ -703,7 +698,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         //境界粒子を保持
         ArrayList<Integer> border = new ArrayList<Integer>();
-        if(select_btn != MenuActivity.PictureButton.Break) {
+        if(mUserSelectHardness != MenuActivity.PictureButton.Break) {
             ArrayList<Integer> line = new ArrayList<Integer>();
 
             //行数分ループ
@@ -735,10 +730,10 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             textureId = makeTextureSoft(gl, resId);
         }
 
-        this.addParticleData(gl, ps, pg, particleRadius, row, border, textureId);
+        addParticleData(gl, ps, pg, particleRadius, row, border, textureId);
     }
 
-    /**
+    /*
      *
      */
     private void creParticleSystem(float particleRadius){
@@ -753,10 +748,10 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         psd.setMaxCount(729);                     //0以外の値を設定する。
         //psd.setMaxCount(1458);
         //psd.setLifetimeGranularity();
-        mPs = world.createParticleSystem(psd);
+        mParticleSystem = mWorld.createParticleSystem(psd);
     }
 
-    /**
+    /*
      * パーティクルグループ定義の設定
      * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
      */
@@ -768,29 +763,29 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             pgd.setShape(shape);
         }else{
             //plistにある座標で図形を生成
-            int shapenum = mPlistManage.setPlistBuffer(this.view.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
+            int shapenum = mPlistManage.setPlistBuffer(mMainGlView.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
             if(shapenum == -1){
                 //取得エラーなら、終了
                 return;
             }
         }
 
-        pgd.setFlags(this.setParticleFlg);
+        pgd.setFlags(mSetParticleFlg);
         pgd.setGroupFlags(ParticleGroupFlag.solidParticleGroup);
         pgd.setPosition(cx, cy);
-        pgd.setLifetime(this.setParticleLifetime);
+        pgd.setLifetime(mSetParticleLifetime);
 
         //!リファクタリング
-        if( select_btn == MenuActivity.PictureButton.Break ){
+        if( mUserSelectHardness == MenuActivity.PictureButton.Break ){
             //生成位置をランダムに
-            int offsetx = rundom.nextInt(rangeCreateBreakX);
-            int offsety = rundom.nextInt(rangeCreateBreakY);
+            int offsetx = mRundom.nextInt(rangeCreateBreakX);
+            int offsety = mRundom.nextInt(rangeCreateBreakY);
 
             pgd.setPosition(rangeCreateBreakMin.getX() + offsetx, rangeCreateBreakMin.getY() + offsety);
         }
     }
 
-    /**
+    /*
      * 同一行のパーティクルによるバッファ生成
      * @para I:パーティクルシステム
      * @para I:パーティクルグループ
@@ -818,7 +813,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         row.add(line);
     }
 
-    /**
+    /*
      * 描画のため繰り返し呼ばれる
      * @param gl
      */
@@ -847,7 +842,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         long startTime = System.nanoTime();
 
-        world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PARTICLE_ITERATIONS);
+        mWorld.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PARTICLE_ITERATIONS);
 
         //背景色を設定
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT
@@ -858,57 +853,57 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl.glLoadIdentity();                   //初期化
 
         //パーティクル情報
-        ParticleSystem ps = mPs;
-        ParticleData pd = this.particleData;
+        ParticleSystem ps = mParticleSystem;
+        ParticleData pd = mParticleData;
         ParticleGroup pg = pd.getParticleGroup();
 
         //パーティクル再生成
-        this.regenerationParticle(gl, ps, pd, pg);
+        regenerationParticle(gl, ps, pd, pg);
 
         //パーティクル描画更新
-        this.updateParticleDraw(gl, ps, pd, pg);
+        updateParticleDraw(gl, ps, pd, pg);
 
         //移動物体の制御
-        this.moveBodyControl(gl);
+        moveBodyControl(gl);
 
         //静的物体の描画更新
-        //this.updateStaticBodyDraw(gl);
+        //updateStaticBodyDraw(gl);
 
         //タッチ物体
-        this.updateTouchBodyDraw(gl);
+        updateTouchBodyDraw(gl);
 
         //フリック物体の描画更新
-        this.updateFlickBodyDraw(gl);
+        updateFlickBodyDraw(gl);
 
         //フリック物体の生成
-        this.createFlickBody(gl);
+        createFlickBody(gl);
 
         //フリック物体の生成
-        this.createTouchBody(gl);
+        createTouchBody(gl);
 
         //弾の管理
-        this.bulletBodyManage(gl);
+        bulletBodyManage(gl);
 
         long endTime  = System.nanoTime();
         //Log.d("TIME", "経過時間　" + ((endTime - startTime) / 1000000) + "(ms)");
     }
 
-    /**
+    /*
      * 物理体の生成
      */
     private void createPhysicsObject(GL10 gl){
 
         //画面の端の位置を変換(Y座標は上が0)
-        positionMax = getWorldPoint(this.view.getWidth(), 0, gl);
-        positionMid = getWorldPoint(this.view.getWidth() / 2, this.view.getHeight() / 2, gl);
-        positionMin = getWorldPoint(0, this.view.getHeight(), gl);
+        mPositionMax = getWorldPoint(mMainGlView.getWidth(), 0, gl);
+        mPositionMid = getWorldPoint(mMainGlView.getWidth() / 2, mMainGlView.getHeight() / 2, gl);
+        mPositionMin = getWorldPoint(0, mMainGlView.getHeight(), gl);
 
         //Break生成位置の範囲
-        float qtrX = (positionMax[0] - positionMin[0]) / 4;
-        float qtrY = (positionMax[1] - positionMin[1]) / 4;
+        float qtrX = (mPositionMax[0] - mPositionMin[0]) / 4;
+        float qtrY = (mPositionMax[1] - mPositionMin[1]) / 4;
 
-        rangeCreateBreakMin = new Vec2( positionMid[0] - qtrX, positionMid[1] - qtrY );
-        rangeCreateBreakMax = new Vec2( positionMid[0] + qtrX, positionMid[1] + qtrY );
+        rangeCreateBreakMin = new Vec2( mPositionMid[0] - qtrX, mPositionMid[1] - qtrY );
+        rangeCreateBreakMax = new Vec2( mPositionMid[0] + qtrX, mPositionMid[1] + qtrY );
 
         rangeCreateBreakX = Math.round( rangeCreateBreakMax.getX() - rangeCreateBreakMin.getX() );
         rangeCreateBreakY = Math.round( rangeCreateBreakMax.getY() - rangeCreateBreakMin.getY() );
@@ -917,9 +912,9 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         /*  メニュー座標の変換処理 */
         //メニュー上部(本体)
         //四隅の座標を変換
-        float[] worldMenuPosTopLeft = getWorldPoint(this.menuContentsLeft, this.menuContentsTop, gl);           //左上
-        float[] worldMenuPosTopRight = getWorldPoint(this.menuContentsRight, this.menuContentsTop, gl);         //右上
-        float[] worldMenuPosBottomRight = getWorldPoint(this.menuContentsRight, this.menuContentsBottom, gl);   //右下
+        float[] worldMenuPosTopLeft = getWorldPoint(menuContentsLeft, menuContentsTop, gl);           //左上
+        float[] worldMenuPosTopRight = getWorldPoint(menuContentsRight, menuContentsTop, gl);         //右上
+        float[] worldMenuPosBottomRight = getWorldPoint(menuContentsRight, menuContentsBottom, gl);   //右下
         //大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
         //物理体再生時には、物体の横幅・縦幅
         //画面上の位置情報としては、 メニュービューの半分のサイズ
@@ -934,13 +929,13 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         float upper_menu_posY = worldMenuPosTopLeft[1];
 
-        //this.addBox(gl, width, height, posX, posY, 0, BodyType.staticBody, 10, R.drawable.white, false);
+        //addBox(gl, width, height, posX, posY, 0, BodyType.staticBody, 10, R.drawable.white, false);
 
         //メニュー下部(初期)
         //四隅の座標を変換
-        worldMenuPosTopLeft = getWorldPoint(this.menuInitLeft, this.menuInitTop, gl);
-        worldMenuPosTopRight = getWorldPoint(this.menuInitRight, this.menuInitTop, gl);
-        worldMenuPosBottomRight = getWorldPoint(this.menuInitRight, this.menuInitBottom, gl);
+        worldMenuPosTopLeft = getWorldPoint(menuInitLeft, menuInitTop, gl);
+        worldMenuPosTopRight = getWorldPoint(menuInitRight, menuInitTop, gl);
+        worldMenuPosBottomRight = getWorldPoint(menuInitRight, menuInitBottom, gl);
         //大きさ( 半分にすると適切なサイズに調整させるのは、その内調査 )
         float width_ini = (worldMenuPosTopRight[0] - worldMenuPosTopLeft[0]) / 2;
         float height_ini = (worldMenuPosTopRight[1] - worldMenuPosBottomRight[1]) / 2;
@@ -948,7 +943,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         posX = worldMenuPosTopLeft[0] + width_ini;
         posY = worldMenuPosBottomRight[1] + height_ini;
 
-        //this.addBox(gl, width_ini, height_ini, posX, posY, 0, BodyType.staticBody, 10, R.drawable.white, false);
+        //addBox(gl, width_ini, height_ini, posX, posY, 0, BodyType.staticBody, 10, R.drawable.white, false);
 
         //menu(▲)の位置
         menuInitPosY = posY;
@@ -956,7 +951,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         //menu背後の物体を生成（高さ = 本体 + 初期、位置 = 上部のみ初期位置と重なる形で配置）
         float half_of_total_height = height + height_ini;
         posY = worldMenuPosTopLeft[1] - half_of_total_height;
-        this.addBox(gl, width, half_of_total_height, posX - 0, posY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
+        addBox(gl, width, half_of_total_height, posX - 0, posY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
 
         //位置情報を保持
         menuPosX = posX;
@@ -966,42 +961,42 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         /* 表示時の速度を保持 */
         //上昇
-        float millsecond = (float) this.menuUpAniDuration / 1000f;
+        float millsecond = (float) menuUpAniDuration / 1000f;
         float ratioToSecond = 1.0f / millsecond;
         float speed = height * ratioToSecond * 1.32f;        //@1.32f の理由・妥当性はその内調査。
-        this.menuUpVelocity = new Vec2(0, speed);
+        mMenuUpVelocity = new Vec2(0, speed);
 
         //下降
-        millsecond = (float) this.menuDownAniDuration / 1000f;
+        millsecond = (float) menuDownAniDuration / 1000f;
         ratioToSecond = 1.0f / millsecond;
         speed = height * ratioToSecond * 1.32f;         //@1.32f の理由・妥当性はその内調査。
-        this.menuDownVelocity = new Vec2(0, -(speed));
+        mMenuDownVelocity = new Vec2(0, -(speed));
 
         //Break以外
-        if(select_btn != MenuActivity.PictureButton.Break){
-            this.addBox(gl, positionMax[0], 1, positionMid[0], positionMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //上の壁
+        if(mUserSelectHardness != MenuActivity.PictureButton.Break){
+            addBox(gl, mPositionMax[0], 1, mPositionMid[0], mPositionMax[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //上の壁
         }
 
         //システム定義と生成
-        this.creParticleSystem(this.setParticleRadius);
+        creParticleSystem(mSetParticleRadius);
         //パーティクル生成
-        this.addSoftBody(gl, 4, 4, positionMid[0], positionMid[1], this.setParticleRadius, R.drawable.kitune_tanuki2);
+        addSoftBody(gl, 4, 4, mPositionMid[0], mPositionMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
 
         //壁
-        this.addBox(gl, 1, positionMax[1], positionMin[0] - 1, positionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);          //左の壁
-        this.addBox(gl, 1, positionMax[1], positionMax[0] + 1, positionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //右の壁
+        addBox(gl, 1, mPositionMax[1], mPositionMin[0] - 1, mPositionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);          //左の壁
+        addBox(gl, 1, mPositionMax[1], mPositionMax[0] + 1, mPositionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //右の壁
 
         /* 底(メニューの存在を考慮) */
 
         if(mMode){
-            this.addBox(gl, positionMax[0], 1, positionMid[0], positionMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //下の壁
+            addBox(gl, mPositionMax[0], 1, mPositionMid[0], mPositionMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //下の壁
         }else{
             //Picture
             //横幅・X座標位置
-            float bottom_width = (worldMenuPosTopLeft[0] - positionMin[0]) / 2;
-            float bottom_posX = positionMin[0] + bottom_width - 1;                  //メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
+            float bottom_width = (worldMenuPosTopLeft[0] - mPositionMin[0]) / 2;
+            float bottom_posX = mPositionMin[0] + bottom_width - 1;                  //メニュー物体とちょうどの位置だと下がるときうまくいかない時があるため、少し位置を左にする。
 
-            this.addBox(gl, bottom_width, 1, bottom_posX, positionMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //下の壁
+            addBox(gl, bottom_width, 1, bottom_posX, mPositionMin[1] - 1, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.STATIC);   //下の壁
         }
 
 
@@ -1009,18 +1004,18 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         return;
     }
 
-    /**
+    /*
      * パーティクルの再生成
      */
     private void regenerationParticle(GL10 gl, ParticleSystem ps, ParticleData pd, ParticleGroup pg) {
 
         //パーティクル再生成なし
-        if (regeneration == RegenerationState.END) {
+        if (mRegenerationState == RegenerationState.END) {
             //処理なし
             return;
 
         //パーティクル削除
-        }else if (regeneration == RegenerationState.DELETE) {
+        }else if (mRegenerationState == RegenerationState.DELETE) {
             Log.i("test", "regeneration delete");
 
             //パーティクルグループを削除(粒子とグループは次の周期で削除される)
@@ -1029,44 +1024,44 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             drawGroupUv.clear();
 
             //再生成のシーケンスを生成に更新(次の周期で生成するため)
-            regeneration = RegenerationState.CREATE;
+            mRegenerationState = RegenerationState.CREATE;
 
-        } else if (regeneration == RegenerationState.CREATE) {
+        } else if (mRegenerationState == RegenerationState.CREATE) {
 
             //パーティクル生成
-            this.addSoftBody(gl, 4, 4, positionMid[0], positionMid[1], this.setParticleRadius, R.drawable.kitune_tanuki2);
+            addSoftBody(gl, 4, 4, mPositionMid[0], mPositionMid[1], mSetParticleRadius, R.drawable.kitune_tanuki2);
 
             //Break以外は再生成時に演出を入れる
-            if( select_btn != MenuActivity.PictureButton.Break ) {
+            if( mUserSelectHardness != MenuActivity.PictureButton.Break ) {
                 //パーティクルと重複する物体を生成(再生成演出用)
-                this.addBox(gl, 4, 4, positionMid[0], positionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.OVERLAP);
+                addBox(gl, 4, 4, mPositionMid[0], mPositionMid[1], 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.OVERLAP);
             }
 
             //再生成シーケンス終了。重複物体を生成した状態。
-            regeneration = RegenerationState.OVERLAP;
+            mRegenerationState = RegenerationState.OVERLAP;
 
-        } else if (regeneration == RegenerationState.OVERLAP) {
+        } else if (mRegenerationState == RegenerationState.OVERLAP) {
 
-            if( select_btn != MenuActivity.PictureButton.Break ) {
+            if( mUserSelectHardness != MenuActivity.PictureButton.Break ) {
                 //重複物体はすぐに削除する
-                this.world.destroyBody(overlapBody);
+                mWorld.destroyBody(overlapBody);
             }
 
-            regeneration = RegenerationState.END;
+            mRegenerationState = RegenerationState.END;
         } else {
             /* 処理なし */
         }
     }
 
-    /**
+    /*
      * パーティクルの描画情報の更新(頂点バッファ/UVバッファ)
      */
     private void updateParticleDraw(GL10 gl, ParticleSystem ps, ParticleData pd, ParticleGroup pg) {
         /* 粒子がない場合、何もしない */
         if (pg.getParticleCount() == 0) {
             //Breakなら再生成
-            if (select_btn == MenuActivity.PictureButton.Break) {
-                regeneration = RegenerationState.CREATE;
+            if (mUserSelectHardness == MenuActivity.PictureButton.Break) {
+                mRegenerationState = RegenerationState.CREATE;
             }
 
             return;
@@ -1074,19 +1069,19 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         //Create用
         if(mMode){
-            this.updateParticleCreateDraw(gl, ps, pd);
+            updateParticleCreateDraw(gl, ps, pd);
             return;
         }
 
         /* パーティクルの描画更新 */
-        if (select_btn == MenuActivity.PictureButton.Break) {
-            this.updateParticleBreakDraw(gl, ps, pd);
+        if (mUserSelectHardness == MenuActivity.PictureButton.Break) {
+            updateParticleBreakDraw(gl, ps, pd);
         }else{
-            this.updateParticleUnBreakDraw(gl, ps, pd);
+            updateParticleUnBreakDraw(gl, ps, pd);
         }
     }
 
-    /**
+    /*
      * パーティクル描画更新（Break）
      */
     private void updateParticleBreakDraw(GL10 gl, ParticleSystem ps, ParticleData pd ) {
@@ -1146,7 +1141,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl.glPopMatrix();
     }
 
-    /**
+    /*
      * パーティクル描画更新（Break以外）
      */
     private void updateParticleUnBreakDraw(GL10 gl, ParticleSystem ps, ParticleData pd ) {
@@ -1195,10 +1190,10 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl.glPopMatrix();
 
         //タッチ判定処理
-        this.particleTouchProcess(gl, ps, pd);
+        particleTouchProcess(gl, ps, pd);
     }
 
-    /**
+    /*
      * パーティクル描画更新（Break以外）
      */
     private void updateParticleCreateDraw(GL10 gl, ParticleSystem ps, ParticleData pd ) {
@@ -1232,7 +1227,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             FloatBuffer vertexBuffer = makeFloatBuffer(vertices);
             FloatBuffer uvBuffer = makeFloatBuffer(uv);
 
-            int textureId = this.getDrawProcesstexture(pd);
+            int textureId = getDrawProcesstexture(pd);
 
             //テクスチャの指定
             gl.glActiveTexture(GL10.GL_TEXTURE0);
@@ -1249,7 +1244,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl.glPopMatrix();
 
         //タッチ判定処理
-        this.particleTouchProcess(gl, ps, pd);
+        particleTouchProcess(gl, ps, pd);
     }
 
     private int getDrawProcesstexture(ParticleData pd){
@@ -1257,49 +1252,49 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         ArrayList<Integer> list = pd.getTextureIdList();
         int textureId;
 
-        if( shapeTranceCount < SHAPE_TRANCE_VALUE ){
+        if( mShapeTranceCount < SHAPE_TRANCE_VALUE ){
             textureId = list.get(0);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 2 ){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 2 ){
             textureId = list.get(1);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 3){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 3){
             textureId = list.get(2);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 4){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 4){
             textureId = list.get(3);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 5){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 5){
             textureId = list.get(4);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 6){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 6){
             textureId = list.get(5);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 7){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 7){
             textureId = list.get(6);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 8){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 8){
             textureId = list.get(7);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 9){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 9){
             textureId = list.get(8);
-        }else if(shapeTranceCount < SHAPE_TRANCE_VALUE * 10){
+        }else if(mShapeTranceCount < SHAPE_TRANCE_VALUE * 10){
             textureId = list.get(9);
         }else{
             textureId = list.get(10);
         }
 
         //形状変化のカウンタを更新
-        if( shapeTranceCount < SHAPE_TRANCE_VALUE * 10 ){
-            shapeTranceCount++;
+        if( mShapeTranceCount < SHAPE_TRANCE_VALUE * 10 ){
+            mShapeTranceCount++;
         }
 
         return textureId;
     }
 
-    /**
+    /*
      * 移動物体の制御
      */
     private void moveBodyControl(GL10 gl) {
 
         //制御情報に応じて処理実施
-        if( menuMove == MenuMoveControl.NOTHING )
+        if( mMenuMove == MenuMoveControl.NOTHING )
         {
             //do nothing
         }
-        else if(menuMove == MenuMoveControl.STOP)
+        else if(mMenuMove == MenuMoveControl.STOP)
         {
             Log.i("test", "STOP");
 
@@ -1308,21 +1303,21 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
             //微妙なズレの蓄積を防ぐため、初期位置に移動完了したタイミングで、物体を再生成
             if(menuInitPosY > menuBody.getPositionY()){
-                world.destroyBody(menuBody);
-                this.addBox(gl, menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
+                mWorld.destroyBody(menuBody);
+                addBox(gl, menuWidth, menuHeight, menuPosX - 0, menuPosY, 0, BodyType.staticBody, 11, R.drawable.white, BodyKind.MOVE);
             }
 
             //移動処理終了
-            menuMove = MenuMoveControl.NOTHING;
+            mMenuMove = MenuMoveControl.NOTHING;
 
             Log.i("test", "STOP2");
         }
-        else if(menuMove == MenuMoveControl.WAIT)
+        else if(mMenuMove == MenuMoveControl.WAIT)
         {
             Log.i("test", "WAIT");
 
             //停止要求がくるまで、速度を維持し続ける
-            menuBody.setLinearVelocity(this.menuVelocity);
+            menuBody.setLinearVelocity(mMenuVelocity);
 
             Log.i("test", "WAIT2");
         }
@@ -1332,24 +1327,24 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
             //移動開始
             menuBody.setType(BodyType.dynamicBody);
-            menuBody.setLinearVelocity(this.menuVelocity);
+            menuBody.setLinearVelocity(mMenuVelocity);
 
             //移動状態更新(停止要求待つ)
-            menuMove = MenuMoveControl.WAIT;
+            mMenuMove = MenuMoveControl.WAIT;
 
             Log.i("test", "MOVE2");
         }
     }
 
-    /**
+    /*
      * 静的物体の描画更新(頂点バッファ/UVバッファ)
      */
     private void updateStaticBodyDraw(GL10 gl) {
 
-        for(Long key: this.mapBodyData.keySet()) {
+        for(Long key: mMapBodyData.keySet()) {
             gl.glPushMatrix();
             {
-                BodyData bd = this.mapBodyData.get(key);
+                BodyData bd = mMapBodyData.get(key);
                 gl.glTranslatef(bd.getBody().getPositionX(), bd.getBody().getPositionY(), 0);
                 float angle = (float)Math.toDegrees(bd.getBody().getAngle());
                 gl.glRotatef(angle , 0, 0, 1);
@@ -1380,8 +1375,8 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             return;
         }
 
-        for(Long key: this.mapTouchBodyData.keySet()) {
-            BodyData bd = this.mapTouchBodyData.get(key);
+        for(Long key: mMapTouchBodyData.keySet()) {
+            BodyData bd = mMapTouchBodyData.get(key);
 
             /*
             gl.glPushMatrix();
@@ -1417,8 +1412,8 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
      */
     private void updateFlickBodyDraw(GL10 gl) {
 
-        for(Long key: this.mapFlickBodyData.keySet()) {
-            BodyData bd = this.mapFlickBodyData.get(key);
+        for(Long key: mMapFlickBodyData.keySet()) {
+            BodyData bd = mMapFlickBodyData.get(key);
 
             gl.glPushMatrix();
             {
@@ -1466,10 +1461,10 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             //タッチ中の物体に対する操作
             if( bd.touched ){
 
-                if(frickCtrlType == FlickControlFragment.FlickControl.DELETE){
+                if(mFrickCtrlType == FlickControlFragment.FlickControl.DELETE){
                     //削除受付中なら、削除する
 
-                }else if(frickCtrlType == FlickControlFragment.FlickControl.FIX){
+                }else if(mFrickCtrlType == FlickControlFragment.FlickControl.FIX){
                     //停止受付中なら、完全に物理演算を停止させる
                     body.setType(BodyType.staticBody);
                 } else{
@@ -1485,79 +1480,79 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
     }
 
-    /**
+    /*
      * フリック物体生成
      */
     private void createFlickBody(GL10 gl) {
         //フリック物体が登録されていた場合
-        if(flickObjectData != null){
-            float pos[] = getWorldPoint(flickObjectData.posX, flickObjectData.posY, gl);
+        if(mFlickObjectData != null){
+            float pos[] = getWorldPoint(mFlickObjectData.posX, mFlickObjectData.posY, gl);
 
             //形状
             Body body;
             int addition_force;
-            if(flickObjectData.shape == FlickFigureFragment.FlickShape.BOX){
-                body = this.addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], positionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
+            if(mFlickObjectData.shape == FlickFigureFragment.FlickShape.BOX){
+                body = addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], mPositionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
                 addition_force = 600;
-            } else if (flickObjectData.shape == FlickFigureFragment.FlickShape.TRIANGLE) {
-                body = this.addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], positionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
+            } else if (mFlickObjectData.shape == FlickFigureFragment.FlickShape.TRIANGLE) {
+                body = addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], mPositionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
                 addition_force = 600;
-            } else if (flickObjectData.shape == FlickFigureFragment.FlickShape.CIRCLE) {
-                body = this.addCircle(gl, FLICK_BOX_SIZE, pos[0], positionMin[1] + FLICK_BOX_DOUBLE_SIZE,  0, BodyType.dynamicBody,  0, R.drawable.white, CreateObjectType.FLICK);
+            } else if (mFlickObjectData.shape == FlickFigureFragment.FlickShape.CIRCLE) {
+                body = addCircle(gl, FLICK_BOX_SIZE, pos[0], mPositionMin[1] + FLICK_BOX_DOUBLE_SIZE,  0, BodyType.dynamicBody,  0, R.drawable.white, CreateObjectType.FLICK);
                 addition_force = 5;
             } else{
-                body = this.addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], positionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
+                body = addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], mPositionMin[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.dynamicBody, 10, R.drawable.white, BodyKind.FLICK);
                 addition_force = 600;
             }
 
-            Vec2 force = new Vec2(flickObjectData.deltaX * addition_force, flickObjectData.deltaY * addition_force);
+            Vec2 force = new Vec2(mFlickObjectData.deltaX * addition_force, mFlickObjectData.deltaY * addition_force);
             body.applyForceToCenter(force,true);
             body.setGravityScale(2.0f);
 
-            flickObjectData = null;
+            mFlickObjectData = null;
         }
     }
 
-    /**
+    /*
      * タッチ物体生成
      */
     private void createTouchBody(GL10 gl) {
         //タッチ物体が登録されていた場合
-        if(TouchObjectData != null && mTouchFlg == true){
-            float pos[] = getWorldPoint(TouchObjectData.posX, TouchObjectData.posY, gl);
+        if(mTouchObjectData != null && mTouchFlg == true){
+            float pos[] = getWorldPoint(mTouchObjectData.posX, mTouchObjectData.posY, gl);
 
             //形状
-            Body body = this.addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], pos[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.TOUCH);
+            Body body = addBox(gl, FLICK_BOX_SIZE, FLICK_BOX_SIZE, pos[0], pos[1] + FLICK_BOX_DOUBLE_SIZE, 0, BodyType.staticBody, 10, R.drawable.white, BodyKind.TOUCH);
 
             mTouchFlg = false;
         }
     }
 
-    /**
+    /*
      *  弾の管理(生成・削除)
      */
     private void bulletBodyManage(GL10 gl) {
         //大砲が有効なら、弾の生成と発射
-        if(cannonCtrl){
+        if(mCannonCtrl){
 
             //弾の生成(個/s)
-            cannonCreateCycle++;
-            if((cannonCreateCycle % 12) == 0){
+            mCannonCreateCycle++;
+            if((mCannonCreateCycle % 12) == 0){
                 //形状
                 Body body;
-                body = this.addCircle(gl, CANNON_BULLET_SIZE, positionMid[0], positionMin[1] + CANNON_BULLET_DOUBLE_SIZE,  0, BodyType.dynamicBody,  0, R.drawable.white, CreateObjectType.BULLET);
+                body = addCircle(gl, CANNON_BULLET_SIZE, mPositionMid[0], mPositionMin[1] + CANNON_BULLET_DOUBLE_SIZE,  0, BodyType.dynamicBody,  0, R.drawable.white, CreateObjectType.BULLET);
 
                 //上方向に発射
                 Vec2 force = new Vec2(0, 10000);
                 body.applyForceToCenter(force,true);
                 body.setGravityScale(2.0f);
 
-                cannonCreateCycle = 0;
+                mCannonCreateCycle = 0;
             }
 
             //発射済みの弾の描画
-            for (Long key : this.mapCannonData.keySet()) {
-                BodyData bd = this.mapCannonData.get(key);
+            for (Long key : mMapCannonData.keySet()) {
+                BodyData bd = mMapCannonData.get(key);
 
                 gl.glPushMatrix();
                 {
@@ -1585,23 +1580,23 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
                 Body body = bd.getBody();
                 Log.i("test", "velo X=" + body.getLinearVelocity().getX() + " : velo Y=" + body.getLinearVelocity().getY());
                 if( body.getLinearVelocity().getY() < 0 ||  Math.abs(body.getLinearVelocity().getX()) > 15 ){
-                    bulletDeleteList.add(key);
+                    mBulletDeleteList.add(key);
                 }
             }
 
             //削除対象とした弾を削除
-            for( int i = 0; i < bulletDeleteList.size(); i++){
-                long key = bulletDeleteList.get(i);
-                BodyData bd = this.mapCannonData.get(key);
-                world.destroyBody(bd.getBody());
+            for(int i = 0; i < mBulletDeleteList.size(); i++){
+                long key = mBulletDeleteList.get(i);
+                BodyData bd = mMapCannonData.get(key);
+                mWorld.destroyBody(bd.getBody());
                 bd.getBody().delete();
-                this.mapCannonData.remove(key);
+                mMapCannonData.remove(key);
             }
-            bulletDeleteList.clear();
+            mBulletDeleteList.clear();
         }
     }
 
-    /**
+    /*
      * 画面座標を物理座標に変換する
      */
     private float[] getWorldPoint(float mx, float my, GL10 gl) {
@@ -1621,9 +1616,9 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
         float[] ret = new float[4];
         GLU.gluUnProject(
-                mx, (float)this.view.getHeight()-my, 1f,
+                mx, (float)mMainGlView.getHeight()-my, 1f,
                 model, 0, proj, 0,
-                new int[]{0, 0, this.view.getWidth(), this.view.getHeight()}, 0,
+                new int[]{0, 0, mMainGlView.getWidth(), mMainGlView.getHeight()}, 0,
                 ret, 0);
         float x = (float)(ret[0] / ret[3]);
         float y = (float)(ret[1] / ret[3]);
@@ -1636,7 +1631,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         return position;
     }
 
-    /**
+    /*
      * 主に landscape と portraid の切り替え (縦向き、横向き切り替え) のときに呼ばれる
      * @param gl
      * @param width
@@ -1688,18 +1683,18 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         glInitStatus = GLInitStatus.FinInit;
     }
 
-    /**
+    /*
      * テクスチャの生成
      * テクスチャは引数にて指定する。
      */
     private int makeTexture(GL10 gl10, int resId) {
-        Integer texId = this.mapResIdToTextureId.get(resId);
+        Integer texId = mMapResIdToTextureId.get(resId);
         if (texId != null) {
             return  texId;
         }
 
         //リソースIDから、Bitmapオブジェクトを生成
-        Resources r = this.view.getContext().getResources();
+        Resources r = mMainGlView.getContext().getResources();
         Bitmap bmp= BitmapFactory.decodeResource(r, resId);
 
         //テクスチャのメモリ確保
@@ -1716,16 +1711,16 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
         //リソースIDとテクスチャIDを保持
-        this.mapResIdToTextureId.put(resId, textureIds[0]);
+        mMapResIdToTextureId.put(resId, textureIds[0]);
         return textureIds[0];
     }
 
-    /**
+    /*
      * テクスチャの生成(パーティクル用)
      * テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
      */
     private int makeTextureSoft(GL10 gl10, int resId) {
-        Integer texId = this.mapResIdToTextureId.get(resId);
+        Integer texId = mMapResIdToTextureId.get(resId);
         if (texId != null) {
             return  texId;
         }
@@ -1737,29 +1732,29 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         //テクスチャへのビットマップ指定
         gl10.glActiveTexture(GL10.GL_TEXTURE0);                                     //テクスチャユニットを選択
         gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);                      //テクスチャIDとGL_TEXTURE_2Dをバインド
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, select_bmp, 0);    //バインドされたテクスチャにBitmapをセットする
+        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, mUserSelectBmp, 0);    //バインドされたテクスチャにBitmapをセットする
 
         //テクスチャのフィルタ指定
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
         //リソースIDとテクスチャIDを保持
-        this.mapResIdToTextureId.put(resId, textureIds[0]);
+        mMapResIdToTextureId.put(resId, textureIds[0]);
         return textureIds[0];
     }
 
-    /**
+    /*
      * テクスチャの生成(パーティクル用)
      * テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
      */
     private int makeTextureSoftCreate(GL10 gl10, int resId) {
-        Integer texId = this.mapResIdToTextureId.get(resId);
+        Integer texId = mMapResIdToTextureId.get(resId);
         if (texId != null) {
             return  texId;
         }
 
         //リソースIDから、Bitmapオブジェクトを生成
-        Resources r = this.view.getContext().getResources();
+        Resources r = mMainGlView.getContext().getResources();
         Bitmap bmp= BitmapFactory.decodeResource(r, resId);
 
         //テクスチャのメモリ確保
@@ -1776,11 +1771,11 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
 
         //リソースIDとテクスチャIDを保持
-        this.mapResIdToTextureId.put(resId, textureIds[0]);
+        mMapResIdToTextureId.put(resId, textureIds[0]);
         return textureIds[0];
     }
 
-    /**
+    /*
      * float配列をFloatBufferに変換
      */
     public static FloatBuffer makeFloatBuffer(float[] array) {
@@ -1792,7 +1787,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
 
 
-    /**
+    /*
      * タッチコールバック
      */
     public synchronized boolean onTouch(View v, MotionEvent event) {
@@ -1809,7 +1804,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
 
                 //createのみ
                 if(mMode){
-                    this.reqEntryTouchObject(event.getX(), event.getY());
+                    reqEntryTouchObject(event.getX(), event.getY());
                 }
 
                 Log.i("test", "touch getX=" + event.getX());
@@ -1820,11 +1815,11 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             //タッチ解除
             case MotionEvent.ACTION_UP:
                 //粒子用：状態更新
-                particleTouchData.setStatus(ParticalTouchStatus.Extern);
-                particleTouchData.setBorderIndex(-1);
-                particleTouchData.setFollowingIndex(-1);
-                particleTouchData.setTouchPosX(0xFFFF);
-                particleTouchData.setTouchPosY(0xFFFF);
+                mParticleTouchData.setStatus(ParticalTouchStatus.Extern);
+                mParticleTouchData.setBorderIndex(-1);
+                mParticleTouchData.setFollowingIndex(-1);
+                mParticleTouchData.setTouchPosX(0xFFFF);
+                mParticleTouchData.setTouchPosY(0xFFFF);
 
                 //フリック物体用：タッチ状態クリア
                 touchActionDown = false;
@@ -1833,7 +1828,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
                 //createのみ
                 if(mMode){
                     touchBodyTouchClear();
-                    TouchObjectData = null;
+                    mTouchObjectData = null;
                 }
 
                 break;
@@ -1841,8 +1836,8 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             //タッチ移動
             case MotionEvent.ACTION_MOVE:
                 //粒子用：タッチ中の位置を更新
-                particleTouchData.setTouchPosX(event.getX());
-                particleTouchData.setTouchPosY(event.getY());
+                mParticleTouchData.setTouchPosX(event.getX());
+                mParticleTouchData.setTouchPosY(event.getY());
 
                 //タッチ中の位置を保持
                 touchMovePos.set(event.getX(), event.getY());
@@ -1856,13 +1851,13 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         return true;
     }
 
-    /**
+    /*
      * フリック物体：タッチ状態クリア
      */
     private void flickBodyTouchClear() {
 
-        for(Long key: this.mapFlickBodyData.keySet()) {
-            BodyData bd = this.mapFlickBodyData.get(key);
+        for(Long key: mMapFlickBodyData.keySet()) {
+            BodyData bd = mMapFlickBodyData.get(key);
 
             //一つしかタッチできないため、見つかれば終了
             if( bd.touched ){
@@ -1872,27 +1867,27 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
     }
 
-    /**
+    /*
      * タッチ物体：タッチ状態クリア
      */
     private void touchBodyTouchClear() {
 
         //物体を削除
-        for(Long key: this.mapTouchBodyData.keySet()) {
-            BodyData bd = this.mapTouchBodyData.get(key);
-            this.world.destroyBody(bd.getBody());
+        for(Long key: mMapTouchBodyData.keySet()) {
+            BodyData bd = mMapTouchBodyData.get(key);
+            mWorld.destroyBody(bd.getBody());
         }
 
         //mapクリア
-        this.mapTouchBodyData.clear();
+        mMapTouchBodyData.clear();
     }
 
-    /**
+    /*
      * 粒子に対するタッチ状態を確認
      */
     private void particleTouchProcess(GL10 gl, ParticleSystem ps, ParticleData pd){
 
-        if( particleTouchData.touchPosX == 0xFFFF){
+        if( mParticleTouchData.touchPosX == 0xFFFF){
             //未タッチなら処理なし
             return;
         }
@@ -1905,15 +1900,15 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         float radius = pd.getParticleRadius();
 
         //判定範囲
-        float[] touchPos = getWorldPoint(particleTouchData.touchPosX, particleTouchData.touchPosY, gl);
+        float[] touchPos = getWorldPoint(mParticleTouchData.touchPosX, mParticleTouchData.touchPosY, gl);
         float minX = touchPos[0] - radius;
         float maxX = touchPos[0] + radius;
         float minY = touchPos[1] - radius;
         float maxY = touchPos[1] + radius;
 
         //タッチ位置のworld座標
-        particleTouchData.touchPosWorldX = touchPos[0];
-        particleTouchData.touchPosWorldY = touchPos[1];
+        mParticleTouchData.touchPosWorldX = touchPos[0];
+        mParticleTouchData.touchPosWorldY = touchPos[1];
 
         //タッチ判定
         int num = pg.getParticleCount();
@@ -1935,7 +1930,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
                     //Log.i("境界", "Index=" + index);
 
                     //タッチ状態→境界
-                    particleTouchData.borderIndex = index;
+                    mParticleTouchData.borderIndex = index;
                     status = ParticalTouchStatus.Border;
                     break;
                 }
@@ -1944,7 +1939,7 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
 
         //追随判定
-        if( ((particleTouchData.status == ParticalTouchStatus.Border) || (particleTouchData.status == ParticalTouchStatus.Trace))
+        if( ((mParticleTouchData.status == ParticalTouchStatus.Border) || (mParticleTouchData.status == ParticalTouchStatus.Trace))
             && (status == ParticalTouchStatus.Extern)){
             //前回の判定結果が、「境界」or「追随」で、かつ、今回の判定結果が「外側」であれば、状態を追随にする
             status = ParticalTouchStatus.Trace;
@@ -1952,54 +1947,54 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
             Log.i("状態", "追随確定");
 
             /* 粒子をタッチ位置に付随させる */
-            ps.setParticlePosition(particleTouchData.borderIndex, particleTouchData.touchPosWorldX + 0.1f, particleTouchData.touchPosWorldY+ 0.1f);
+            ps.setParticlePosition(mParticleTouchData.borderIndex, mParticleTouchData.touchPosWorldX + 0.1f, mParticleTouchData.touchPosWorldY+ 0.1f);
         }
 
         //保持するタッチ状態を更新(次回前回値として参照)
-        particleTouchData.status = status;
+        mParticleTouchData.status = status;
     }
 
-    /**
+    /*
      * メニュービュー位置情報の設定
      */
     public void reqSetMenuSize(CreateFluidWorldMenuActivity.FluidMenuKind kind, float top, float left, float right, float bottom, int ani_duration ){
 
         //メニュー本体のビュー位置情報を保持
         if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.CONTENTS){
-            this.menuContentsTop = top;
-            this.menuContentsLeft = left;
-            this.menuContentsRight = right;
-            this.menuContentsBottom = bottom;
-            this.menuUpAniDuration = ani_duration;
+            menuContentsTop = top;
+            menuContentsLeft = left;
+            menuContentsRight = right;
+            menuContentsBottom = bottom;
+            menuUpAniDuration = ani_duration;
 
         }else if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.INIT){
-            this.menuInitTop = top;
-            this.menuInitLeft = left;
-            this.menuInitRight = right;
-            this.menuInitBottom = bottom;
-            this.menuDownAniDuration = ani_duration;
+            menuInitTop = top;
+            menuInitLeft = left;
+            menuInitRight = right;
+            menuInitBottom = bottom;
+            menuDownAniDuration = ani_duration;
 
             //すべて取得したら、フラグを更新
-            this.mGetMenuCorner = true;
+            mGetMenuCorner = true;
         }else{
             /* 対象外 */
         }
     }
 
-    /**
+    /*
      * menu動作の制御要求
      */
     public void reqMenuMove(MenuMoveControl control){
 
         if( control == MenuMoveControl.UP){
             //上方向を保持
-            this.menuVelocity = this.menuUpVelocity;
+            mMenuVelocity = mMenuUpVelocity;
 
             Log.i("test", "reqMenuMove UP");
 
         }else if( control == MenuMoveControl.DOWN ){
             // 下方向を保持
-            this.menuVelocity = this.menuDownVelocity;
+            mMenuVelocity = mMenuDownVelocity;
 
             Log.i("test", "reqMenuMove DOWN");
 
@@ -2009,10 +2004,10 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         }
 
         //制御情報を保持
-        this.menuMove = control;
+        mMenuMove = control;
     }
 
-    /**
+    /*
      * フリック物体の生成登録
      * @memo 物理世界外の操作画面よりコールされる。
      * @para 生成位置(X座標) 単位px
@@ -2026,57 +2021,57 @@ public class MainRenderer implements GLSurfaceView.Renderer, View.OnTouchListene
         //フリックされた物体を登録
         Log.i("test", "flick posX=\t" + posX + "\tposY=\t" + posY);
         Log.i("test", "flick deltaX\t" + deltaX + "\tdeltaY\t" + deltaY);
-        flickObjectData = new FlickObjectData(posX, posY, deltaX, deltaY, velocityY, shape);
+        mFlickObjectData = new FlickObjectData(posX, posY, deltaX, deltaY, velocityY, shape);
     }
 
     public void reqEntryTouchObject(float posX, float posY){
         //touchされた物体を登録
-        this.TouchObjectData = new TouchObjectData(posX, posY);
-        this.mTouchFlg       = true;
+        mTouchObjectData = new TouchObjectData(posX, posY);
+        mTouchFlg       = true;
     }
 
-    /**
+    /*
      * フリック物体の制御要求
      */
     public void reqFlickObjectCtrl(FlickControlFragment.FlickControl type){
         //コントロールする種別を保持
-        frickCtrlType = type;
+        mFrickCtrlType = type;
     }
 
-    /**
+    /*
      * 大砲の制御要求
      */
     public void reqCannonCtrl(boolean enable){
         //要求を保持
-        cannonCtrl = enable;
+        mCannonCtrl = enable;
 
         //大砲キャンセル時
         if(!enable){
             //削除漏れに対応
-            for( Long key: mapCannonData.keySet() ){
-                BodyData bd = mapCannonData.get(key);
-                world.destroyBody(bd.getBody());
+            for( Long key: mMapCannonData.keySet() ){
+                BodyData bd = mMapCannonData.get(key);
+                mWorld.destroyBody(bd.getBody());
             }
-            mapCannonData.clear();
-            cannonCreateCycle = 0;
+            mMapCannonData.clear();
+            mCannonCreateCycle = 0;
         }
     }
 
-    /**
+    /*
      * パーティクルの再生成要求
      */
     public void reqRegeneration(){
-        this.regeneration = RegenerationState.DELETE;
+        mRegenerationState = RegenerationState.DELETE;
     }
 
-    /**
+    /*
      * 重力を画面の向きに合わせて設定するかどうか
      */
     public void reqGravityDirection(boolean direction){
 
     }
 
-    /**
+    /*
      * ピン止め
      */
     public void reqSetPin(boolean pin){

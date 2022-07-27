@@ -4,13 +4,13 @@ public class ParticleTouchData {
 
     int borderIndex;
     int followingIndex;
-    MainRenderer.ParticalTouchStatus status;
+    FluidWorldRenderer.ParticalTouchStatus status;
     float touchPosX;
     float touchPosY;
     float touchPosWorldX;
     float touchPosWorldY;
 
-    public ParticleTouchData(int border, int following, MainRenderer.ParticalTouchStatus status, float touchx, float touchy){
+    public ParticleTouchData(int border, int following, FluidWorldRenderer.ParticalTouchStatus status, float touchx, float touchy){
         this.borderIndex = border;
         this.followingIndex = following;
         this.status = status;
@@ -34,11 +34,11 @@ public class ParticleTouchData {
         this.followingIndex = followingIndex;
     }
 
-    public MainRenderer.ParticalTouchStatus getStatus() {
+    public FluidWorldRenderer.ParticalTouchStatus getStatus() {
         return status;
     }
 
-    public void setStatus(MainRenderer.ParticalTouchStatus status) {
+    public void setStatus(FluidWorldRenderer.ParticalTouchStatus status) {
         this.status = status;
     }
 

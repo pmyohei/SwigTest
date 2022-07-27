@@ -84,7 +84,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.regeneration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainRenderer render = glView.getRenderer();
+                FluidWorldRenderer render = glView.getRenderer();
                 render.reqRegeneration();
             }
         });
@@ -92,7 +92,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.pin).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainRenderer render = glView.getRenderer();
+                FluidWorldRenderer render = glView.getRenderer();
                 render.reqSetPin(true);
             }
         });
@@ -100,7 +100,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.gravity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainRenderer render = glView.getRenderer();
+                FluidWorldRenderer render = glView.getRenderer();
                 render.reqGravityDirection(true);
             }
         });
@@ -148,7 +148,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             if(menu_contents.getVisibility() != View.VISIBLE){
                 //メニュー本体処理
                 this.slide_up(menu_contents);
-                glView.getRenderer().reqMenuMove(MainRenderer.MenuMoveControl.UP);
+                glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.UP);
 
                 //説明文のアニメーション表示
                 menu_exp.setVisibility(View.VISIBLE);
@@ -158,7 +158,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }else{
                 //メニュー本体処理
                 this.slide_down(menu_contents);
-                glView.getRenderer().reqMenuMove(MainRenderer.MenuMoveControl.DOWN);
+                glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.DOWN);
 
                 //説明文のアニメーション非表示
                 menu_exp.setVisibility(View.INVISIBLE);
@@ -186,7 +186,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                 @Override
                 public void onAnimationEnd(final Animation animation) {
                     //menuアニメーション停止通知
-                    glView.getRenderer().reqMenuMove(MainRenderer.MenuMoveControl.STOP);
+                    glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
 
                     //アニメーションが終了すれば、受付可能にする
                     enable = true;
@@ -220,7 +220,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                     v.setAlpha(0);
 
                     //menuアニメーション停止通知
-                    glView.getRenderer().reqMenuMove(MainRenderer.MenuMoveControl.STOP);
+                    glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
 
                     //アニメーションが終了すれば、受付可能にする
                     enable = true;
@@ -250,7 +250,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         findViewById(R.id.container).getGlobalVisibleRect(corners, globalOffset);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
-        MainRenderer render = glView.getRenderer();
+        FluidWorldRenderer render = glView.getRenderer();
         render.reqSetMenuSize(FluidMenuKind.CONTENTS, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_UP_ANIMATION_DURATION);
 
         //メニュー下部

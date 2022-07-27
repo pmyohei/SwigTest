@@ -10,16 +10,16 @@ import java.util.ArrayList;
 
 public class MainGlView extends GLSurfaceView {
 
-    MainRenderer renderer;
+    FluidWorldRenderer renderer;
 
     public MainGlView(Context context, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         super(context);
-        this.renderer = new MainRenderer(this, bmp, select, touchList);
+        this.renderer = new FluidWorldRenderer(this, bmp, select, touchList);
         setRenderer(renderer);
         this.setOnTouchListener(this.renderer);
     }
 
-    public MainRenderer getRenderer() {
+    public FluidWorldRenderer getRenderer() {
         return renderer;
     }
 }

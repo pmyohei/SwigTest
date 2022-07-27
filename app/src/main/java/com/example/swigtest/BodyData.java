@@ -4,7 +4,7 @@ import com.google.fpl.liquidfun.Body;
 
 import java.nio.FloatBuffer;
 
-import static com.example.swigtest.MainRenderer.makeFloatBuffer;
+import static com.example.swigtest.FluidWorldRenderer.makeFloatBuffer;
 
 public class BodyData {
 

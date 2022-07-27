@@ -144,7 +144,7 @@ public class FlickFigureFragment extends Fragment {
             }
 
             //フリックした物体をGL側に登録
-            MainRenderer render = glView.getRenderer();
+            FluidWorldRenderer render = glView.getRenderer();
             render.reqEntryFlickObject(e2.getX() + mBoxPosOffset, e2.getY(), e2.getX() - e1.getX(), Math.abs(e2.getY() - e1.getY()), velocityY, FlickShape.BOX);
 
             return false;
@@ -170,7 +170,7 @@ public class FlickFigureFragment extends Fragment {
             }
 
             //フリックした物体をGL側に登録
-            MainRenderer render = glView.getRenderer();
+            FluidWorldRenderer render = glView.getRenderer();
             render.reqEntryFlickObject(e2.getX() + mTrianglePosOffset, e2.getY(), e2.getX() - e1.getX(), Math.abs(e2.getY() - e1.getY()), velocityY, FlickShape.TRIANGLE);
 
             return false;
@@ -196,7 +196,7 @@ public class FlickFigureFragment extends Fragment {
             }
 
             //フリックした物体をGL側に登録
-            MainRenderer render = glView.getRenderer();
+            FluidWorldRenderer render = glView.getRenderer();
             render.reqEntryFlickObject(e2.getX() + mCirclePosOffset, e2.getY(), e2.getX() - e1.getX(), Math.abs(e2.getY() - e1.getY()), velocityY, FlickShape.CIRCLE);
 
             return false;

@@ -43,7 +43,7 @@ public class FlickActionFragment extends Fragment {
             enable = !enable;
 
             //OpenGL側へ制御要求
-            MainRenderer render = glView.getRenderer();
+            FluidWorldRenderer render = glView.getRenderer();
             render.reqCannonCtrl(enable);
         }
     }
