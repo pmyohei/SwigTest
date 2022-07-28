@@ -162,7 +162,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /* その他制御 */
     private boolean mMode = false;                     //createなら、trueに変える
     private MenuActivity.PictureButton mUserSelectHardness;
-    Random mRundom;
+    Random mRandom;
 
     /* テスト用 */
     private boolean testflg = false;
@@ -231,7 +231,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     public FluidWorldRenderer(MainGlView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mMainGlView = mainGlView;
         mUserSelectBmp = bmp;
-        mUserSelectHardness = select;
+//        mUserSelectHardness = select;
 
         //!リファクタリング
         //bmp未指定の場合、Createモードとみなす
@@ -242,26 +242,27 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //!リファクタリング
         if(select == MenuActivity.PictureButton.CreateDraw){
             mUserSelectHardness = MenuActivity.PictureButton.Soft;
-            select = MenuActivity.PictureButton.Soft;
+        } else {
+            mUserSelectHardness = select;
         }
 
         //選択された固さ(パーティクルの質)毎の設定
-        if( select == MenuActivity.PictureButton.Soft ){
+        if( mUserSelectHardness == MenuActivity.PictureButton.Soft ){
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 0.2f;
             mSetParticleLifetime = 0;
 
-        }else if( select == MenuActivity.PictureButton.Hard ){
+        }else if( mUserSelectHardness == MenuActivity.PictureButton.Hard ){
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 0.5f;
             mSetParticleLifetime = 0;
 
-        }else if( select == MenuActivity.PictureButton.VeryHard ){
+        }else if( mUserSelectHardness == MenuActivity.PictureButton.VeryHard ){
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 1.0f;
             mSetParticleLifetime = 0;
 
-        }else if( select == MenuActivity.PictureButton.Break ){
+        }else if( mUserSelectHardness == MenuActivity.PictureButton.Break ){
             mSetParticleFlg = ParticleFlag.waterParticle;
             mSetParticleRadius = 0.2f;
             mSetParticleLifetime = 6;
@@ -270,13 +271,13 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //物理世界生成
         mWorld = new World(0, -10);
         //ランダム生成
-        mRundom = new Random();
+        mRandom = new Random();
         //plist管理クラス
         mPlistManage = new PlistDataManager();
     }
 
     /*
-     *
+     *　Bodyの追加
      */
     private void addBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
         long id = mBodyDataId++;
@@ -285,7 +286,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     *
+     * タッチ可能Bodyの追加
      */
     private void addTouchBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
         long id = mBodyDataId++;
@@ -293,9 +294,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         mMapTouchBodyData.put(id, data);
     }
 
-
     /*
-     *
+     * フリック可能Bodyの追加
      */
     private void addFlickBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
         long id = mBodyDataId++;
@@ -304,7 +304,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     *
+     * 銃弾用Bodyの追加
      */
     private void addBulletBodyData(Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
         long id = mBodyDataId++;
@@ -778,8 +778,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //!リファクタリング
         if( mUserSelectHardness == MenuActivity.PictureButton.Break ){
             //生成位置をランダムに
-            int offsetx = mRundom.nextInt(rangeCreateBreakX);
-            int offsety = mRundom.nextInt(rangeCreateBreakY);
+            int offsetx = mRandom.nextInt(rangeCreateBreakX);
+            int offsety = mRandom.nextInt(rangeCreateBreakY);
 
             pgd.setPosition(rangeCreateBreakMin.getX() + offsetx, rangeCreateBreakMin.getY() + offsety);
         }
@@ -787,9 +787,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * 同一行のパーティクルによるバッファ生成
-     * @para I:パーティクルシステム
-     * @para I:パーティクルグループ
-     * @para O:行配列
+     *  @para I:パーティクルシステム
+     *  @para I:パーティクルグループ
+     *  @para O:行配列
      */
     private void setParticleGroupRow(ParticleSystem ps, ParticleGroup pg, ArrayList<ArrayList<Integer>> row){
         //行ごとに保持
@@ -814,39 +814,51 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 描画のため繰り返し呼ばれる
-     * @param gl
+     * フレーム描画初期化処理
+     *   true ：フレーム描画可
+     *   false：フレーム描画不可
      */
-    @Override
-    public void onDrawFrame(GL10 gl) {
+    private boolean initDrawFrame(GL10 gl) {
         //初期化完了していれば
         if (glInitStatus == GLInitStatus.FinInit) {
             //メニューのサイズが設定されるまで、処理なし
-            if(!mGetMenuCorner && (mMode == false)){
-                return;
+            if( !mGetMenuCorner && !mMode ){
+                return false;
             }
 
             //初期配置用の物理体生成
             createPhysicsObject(gl);
-
             //GL初期化状態を描画可能に更新
             glInitStatus = GLInitStatus.Drawable;
 
         } else if (glInitStatus == GLInitStatus.PreInit) {
             //初期化コール前なら何もしない(セーフティ)
-            return;
+            return false;
+        }
 
-        } else {
-            //do nothing
+        return true;
+    }
+
+
+    /*
+     * 描画のため繰り返し呼ばれる
+     *  @param gl
+     */
+    @Override
+    public void onDrawFrame(GL10 gl) {
+        //フレーム描画初期化処理
+        boolean initFin = initDrawFrame( gl );
+        if( !initFin ){
+            return;
         }
 
         long startTime = System.nanoTime();
 
+        //物理世界を更新
         mWorld.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS, PARTICLE_ITERATIONS);
 
         //背景色を設定
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT
-                | GL10.GL_DEPTH_BUFFER_BIT);
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 
         //ビューの変換行列の作成
         gl.glMatrixMode(GL10.GL_MODELVIEW);   //マトリクス(4x4の変換行列)の指定
@@ -859,7 +871,6 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         //パーティクル再生成
         regenerationParticle(gl, ps, pd, pg);
-
         //パーティクル描画更新
         updateParticleDraw(gl, ps, pd, pg);
 
@@ -1015,7 +1026,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             return;
 
         //パーティクル削除
-        }else if (mRegenerationState == RegenerationState.DELETE) {
+        } else if (mRegenerationState == RegenerationState.DELETE) {
             Log.i("test", "regeneration delete");
 
             //パーティクルグループを削除(粒子とグループは次の周期で削除される)

@@ -12,6 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
+/*
+ *
+ */
 public class PlistDataManager {
 
     /* plist最大値・最小値 */
@@ -46,20 +49,17 @@ public class PlistDataManager {
     public float getUvMinX() {
         return UvMinX;
     }
-
     public float getUvWidth() {
         return UvWidth;
     }
-
     public float getUvMaxY() {
         return UvMaxY;
     }
-
     public float getUvHeight() {
         return UvHeight;
     }
 
-    /**
+    /*
      *　指定されたplistファイルから、図形生成に必要な情報を取得し、指定されたバッファに格納する。
      * @para   頂点座標バッファ
      * @para   図形頂点数バッファ
@@ -182,9 +182,9 @@ public class PlistDataManager {
         return shapeNum;
     }
 
-    /**
+    /*
      *　座標値を一定のサイズになるよう平準化する。
-     * @para 座標配列
+     *  @para 座標配列
      */
     private void levelingPlist(ArrayList<Float> plistVer ){
 
@@ -229,7 +229,7 @@ public class PlistDataManager {
         }
 
         /* 座標値を平準化 */
-        for(int i = 0; i < num; i++){
+        for (int i = 0; i < num; i++){
             float value = plistVer.get(i);
 
             if( (i % 2) == 0 ){
@@ -245,7 +245,7 @@ public class PlistDataManager {
         this.setUVData(xMin, yMin, width, height);
     }
 
-    /**
+    /*
      *　UV座標の以下の情報を保持する。
      *  ・UV座標上での最小値（X座標）
      *  ・UV座標上での最大値（Y座標）
