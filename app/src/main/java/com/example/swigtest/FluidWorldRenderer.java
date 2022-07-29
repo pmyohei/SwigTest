@@ -56,7 +56,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private long mSetParticleFlg;
     private float mSetParticleRadius;
     private int mSetParticleLifetime;
-    ParticleTouchData mParticleTouchData = new ParticleTouchData( -1, -1, ParticalTouchStatus.Extern, 0xFFFF, 0xFFFF );
+    ParticleTouchData mParticleTouchData = new ParticleTouchData(-1, -1, ParticalTouchStatus.Extern, 0xFFFF, 0xFFFF);
 
     //静的物体
     private HashMap<Long, BodyData> mMapBodyData = new HashMap<Long, BodyData>();
@@ -141,9 +141,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     PlistDataManager mPlistManage;
 
     //描画対象のバッファ
-    private ArrayList<Integer> drawGroupParIndex = new ArrayList<Integer>();    //頂点座標配列
-    private ArrayList<Vec2> drawGroupUv = new ArrayList<Vec2>();                 //UV座標配列
-    private int drawVerNum;                                                     //描画対象の頂点数
+    private ArrayList<Integer> mRenderParticleBuff = new ArrayList<>();    //パーティクル(頂点)座標配列
+    private ArrayList<Vec2> mRenderUVBuff = new ArrayList<>();             //UV座標配列
+    private int mRenderPointNum;                                           //描画対象の頂点数
 
     /* 定数 */
     private static final float TIME_STEP = 1 / 60f; // 60 fps
@@ -235,34 +235,34 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         //!リファクタリング
         //bmp未指定の場合、Createモードとみなす
-        if( bmp == null ){
+        if (bmp == null) {
             mMode = true;
         }
 
         //!リファクタリング
-        if(select == MenuActivity.PictureButton.CreateDraw){
+        if (select == MenuActivity.PictureButton.CreateDraw) {
             mUserSelectHardness = MenuActivity.PictureButton.Soft;
         } else {
             mUserSelectHardness = select;
         }
 
         //選択された固さ(パーティクルの質)毎の設定
-        if( mUserSelectHardness == MenuActivity.PictureButton.Soft ){
+        if (mUserSelectHardness == MenuActivity.PictureButton.Soft) {
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 0.2f;
             mSetParticleLifetime = 0;
 
-        }else if( mUserSelectHardness == MenuActivity.PictureButton.Hard ){
+        } else if (mUserSelectHardness == MenuActivity.PictureButton.Hard) {
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 0.5f;
             mSetParticleLifetime = 0;
 
-        }else if( mUserSelectHardness == MenuActivity.PictureButton.VeryHard ){
+        } else if (mUserSelectHardness == MenuActivity.PictureButton.VeryHard) {
             mSetParticleFlg = ParticleFlag.elasticParticle;
             mSetParticleRadius = 1.0f;
             mSetParticleLifetime = 0;
 
-        }else if( mUserSelectHardness == MenuActivity.PictureButton.Break ){
+        } else if (mUserSelectHardness == MenuActivity.PictureButton.Break) {
             mSetParticleFlg = ParticleFlag.waterParticle;
             mSetParticleRadius = 0.2f;
             mSetParticleLifetime = 6;
@@ -315,11 +315,11 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      *
      */
-    private void addParticleData(GL10 gl, ParticleSystem ps, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> row, ArrayList<Integer> border, int textureId) {
-        mParticleData = new ParticleData(0, ps, pg, particleRadius, row, border, textureId);
+    private void addParticleData(GL10 gl, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> row, ArrayList<Integer> border, int textureId) {
+        mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, row, border, textureId);
 
         //Createのみ
-        if(mMode){
+        if (mMode) {
             int texture;
             ArrayList<Integer> list = new ArrayList<Integer>();
 
@@ -368,21 +368,21 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         body.createFixture(shape, density);
 
         // OpenGL用
-        float vertices[] = new float[32*2];
-        float uv[] = new float[32*2];
-        for(int i = 0; i < 32; ++i){
-            float a = ((float)Math.PI * 2.0f * i)/32;
-            vertices[i*2]   = r * (float)Math.sin(a);
-            vertices[i*2+1] = r * (float)Math.cos(a);
+        float vertices[] = new float[32 * 2];
+        float uv[] = new float[32 * 2];
+        for (int i = 0; i < 32; ++i) {
+            float a = ((float) Math.PI * 2.0f * i) / 32;
+            vertices[i * 2] = r * (float) Math.sin(a);
+            vertices[i * 2 + 1] = r * (float) Math.cos(a);
 
-            uv[i*2]   = ((float)Math.sin(a) + 1.0f)/2f;
-            uv[i*2+1] = (-1 * (float)Math.cos(a) + 1.0f)/2f;
+            uv[i * 2] = ((float) Math.sin(a) + 1.0f) / 2f;
+            uv[i * 2 + 1] = (-1 * (float) Math.cos(a) + 1.0f) / 2f;
         }
 
         //テクスチャ生成
         int textureId = makeTexture(gl, resId);
 
-        switch (object){
+        switch (object) {
             case PLACEMENT:
                 addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_FAN, textureId);
                 break;
@@ -400,7 +400,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      *
      */
-    public Body addBox(GL10 gl,float hx, float hy, float x, float y, float angle, BodyType type, float density, int resId, BodyKind kind) {
+    public Body addBox(GL10 gl, float hx, float hy, float x, float y, float angle, BodyType type, float density, int resId, BodyKind kind) {
         // Box2d用
         BodyDef bodyDef = new BodyDef();
         bodyDef.setType(type);
@@ -412,10 +412,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         // OpenGL用
         float vertices[] = {
-                - hx, + hy,
-                - hx, - hy,
-                + hx, + hy,
-                + hx, - hy,
+                -hx, +hy,
+                -hx, -hy,
+                +hx, +hy,
+                +hx, -hy,
         };
         //FloatBuffer buffer = makeFloatBuffer(vertices);
 
@@ -432,31 +432,31 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         int textureId = makeTexture(gl, resId);
 
         //種別に応じて、保存先を切り分け
-        if (kind == BodyKind.FLICK){
+        if (kind == BodyKind.FLICK) {
             addFlickBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
-        } else if(kind == BodyKind.STATIC){
+        } else if (kind == BodyKind.STATIC) {
             addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
-        } else if(kind == BodyKind.MOVE){
+        } else if (kind == BodyKind.MOVE) {
             body.setGravityScale(0);
             menuBody = body;
 
             //debug
-            bodyDef.setPosition(x-1, y);
+            bodyDef.setPosition(x - 1, y);
 
             addBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
-        } else if(kind == BodyKind.TOUCH){
+        } else if (kind == BodyKind.TOUCH) {
             body.setGravityScale(0);
             touchBody = body;
 
             //debug
-            bodyDef.setPosition(x-1, y);
+            bodyDef.setPosition(x - 1, y);
 
             addTouchBodyData(body, vertices, uv, GL10.GL_TRIANGLE_STRIP, textureId);
 
-        } else if(kind == BodyKind.OVERLAP){
+        } else if (kind == BodyKind.OVERLAP) {
             overlapBody = body;
 
         }
@@ -470,209 +470,37 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public void addFluidBody(GL10 gl, float hx, float hy, float cx, float cy, float particleRadius, int resId) {
 
-        //
+        //パーティクルグループの生成
         ParticleGroupDef pgd = new ParticleGroupDef();
         setParticleGroupDef(pgd, hx, hy, cx, cy);
         ParticleGroup pg = mParticleSystem.createParticleGroup(pgd);
-        //mPs.setMaxParticleCount(pg.getParticleCount());
 
-        //粒子を行毎に配列で保持
-        ArrayList<ArrayList<Integer>> row = new ArrayList<ArrayList<Integer>>();
-        setParticleGroupRow(mParticleSystem, pg, row);
+        //行単位のパーティクルバッファを作成
+        ArrayList<ArrayList<Integer>> allParticleLine = new ArrayList<>();
+        generateParticleLineBuff(pg, allParticleLine);
 
-        //生成した粒子の半径
+        //パーティクルの直径
         float diameter = particleRadius * 2;
 
-        //OpenGLに渡すために、三角形グルーピングバッファを生成
-        //まず、下辺を基準に(下辺が底辺となるように)グルーピング
-        int row_last_index = row.size() - 1;                         //ループ数=行数 - 1
-        for( int row_index = 0; row_index < row_last_index; row_index++ ){
-
-            //下辺と上辺（ある行とその上の行）
-            ArrayList<Integer> bottom_line = row.get(row_index);
-            ArrayList<Integer> upper_line = row.get(row_index + 1);
-
-            //行の先頭に格納されている「パーティクルシステム側のIndex」
-            int bottom_top_ref_index = bottom_line.get(0);
-            int upper_top_ref_index = upper_line.get(0);
-
-            //行の最後のIndex（こっちは、）
-            int bottom_buf_end_index = bottom_line.size() - 1;
-            int upper_buf_end_index = upper_line.size() - 1;
-            for(int bottom_offset = 0; bottom_offset < bottom_buf_end_index; bottom_offset++){
-
-                //参照するIndex（パーティクルシステム側のIndex）
-                int ref_index = bottom_top_ref_index + bottom_offset;
-
-                float bottom_left_x = mParticleSystem.getParticlePositionX(ref_index);
-                float bottom_right_x = mParticleSystem.getParticlePositionX(ref_index + 1);
-
-                //粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-                if( (bottom_right_x - bottom_left_x) > diameter ){
-                    continue;
-                }
-
-                //上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
-                int upper_offset;
-                float upper_x;
-                int belongs_col = -1;
-                int ref_upper_index = 0;
-                for( upper_offset = 0; upper_offset <= upper_buf_end_index; upper_offset++){
-
-                    //参照するIndex（パーティクルシステム側のIndex）
-                    ref_upper_index = upper_top_ref_index + upper_offset;
-
-                    upper_x = mParticleSystem.getParticlePositionX(ref_upper_index);
-
-                    //下辺の左側の頂点の直上にあるかチェック
-                    if( upper_x == bottom_left_x ){
-                        belongs_col = bottom_offset;
-                        break;
-                    }
-
-                    //下辺の右側の頂点の直上にあるかチェック
-                    if( upper_x == bottom_right_x ){
-                        belongs_col = bottom_offset + 1;
-                        break;
-                    }
-                }
-
-                //頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-                if( belongs_col == -1 ){
-                    continue;
-                }
-
-                //3頂点をバッファに格納
-                drawGroupParIndex.add(ref_index);        //底辺-左
-                drawGroupParIndex.add(ref_index + 1);    //底辺-右
-                drawGroupParIndex.add(ref_upper_index);  //頂点
-            }
-        }
-
-        //今度は、上側の行が底辺になるようにグルーピング
-        for( int row_index = row_last_index; row_index > 0; row_index-- ){
-
-            //下辺と上辺（ある行とその下の行）
-            ArrayList<Integer> upper_line = row.get(row_index);
-            ArrayList<Integer> bottom_line = row.get(row_index - 1);
-
-            //List最後尾のIndex
-            int upper_buf_end_index = upper_line.size() - 1;
-            int bottom_buf_end_index = bottom_line.size() - 1;
-
-            //行の終端に位置するパーティクルIndex
-            int upper_end_ref_index = upper_line.get(upper_buf_end_index);
-            int bottom_end_ref_index = bottom_line.get(bottom_buf_end_index);
-
-            //行の右からチェックしていく
-            for(int upper_offset = 0; upper_offset < upper_buf_end_index; upper_offset++){
-
-                //参照するIndex（パーティクルシステム側のIndex）右からみていくため、減算していく。
-                int ref_index = upper_end_ref_index - upper_offset;
-
-                float upper_right_x = mParticleSystem.getParticlePositionX(ref_index);
-                float upper_left_x = mParticleSystem.getParticlePositionX(ref_index - 1);
-
-                //粒子が隣り合っていないなら、グルーピングしない(描画対象外)
-                if( (upper_right_x - upper_left_x) > diameter ){
-                    continue;
-                }
-
-                //下辺側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
-                int bottom_offset;
-                float bottom_x;
-                int belongs_col = -1;
-                int ref_bottom_index = 0;
-                for( bottom_offset = 0; bottom_offset <= bottom_buf_end_index; bottom_offset++){
-
-                    //参照するIndex（パーティクルシステム側のIndex）
-                    ref_bottom_index = bottom_end_ref_index - bottom_offset;
-
-                    bottom_x = mParticleSystem.getParticlePositionX(ref_bottom_index);
-
-                    //下辺の右側の頂点の直上にあるかチェック
-                    if( bottom_x == upper_right_x ){
-                        belongs_col = upper_buf_end_index - upper_offset;
-                        break;
-                    }
-
-                    //下辺の左側の頂点の直上にあるかチェック
-                    if( bottom_x == upper_left_x ){
-                        belongs_col = upper_buf_end_index - (upper_offset - 1);
-                        break;
-                    }
-                }
-
-                //頂点に適した粒子がないなら、グルーピングしない(描画対象外)
-                if( belongs_col == -1 ){
-                    continue;
-                }
-
-                //3頂点をバッファに格納
-                drawGroupParIndex.add(ref_index);
-                drawGroupParIndex.add(ref_index - 1);
-                drawGroupParIndex.add(ref_bottom_index);
-
-                if( ref_index >= 126 && ref_index <=128 ){
-                    Log.i("test", "drawGroupParIndex=\t" + ref_index);
-                    Log.i("test", "drawGroupParIndex=\t" + (ref_index - 1));
-                    Log.i("test", "drawGroupParIndex=\t" + ref_bottom_index);
-                    Log.i("test", "------------------");
-                }
-            }
-        }
+        //OpenGLに渡す三角形グルーピングバッファを作成
+        generateBottomBaseRendererBuff(allParticleLine, diameter);  //下辺を基準に(下辺が底辺となるように)グルーピング
+        generateTopBaseRendererBuff(allParticleLine, diameter);     //上辺を基準に(上辺が底辺となるように)グルーピング
 
         //頂点数を保持
-        drawVerNum = drawGroupParIndex.size();
+        mRenderPointNum = mRenderParticleBuff.size();
 
-        //パーティクルグループ内の粒子で最小位置と最大位置を取得する
-        float minParticleX = 0xFFFF;
-        float maxParticleX = -(0xFFFF);
-        float minParticleY = 0xFFFF;
-        float maxParticleY = -(0xFFFF);
-        int num = mParticleSystem.getParticleCount();
-        for( int i = 0; i < num; i++ ){
-            //X座標
-            float pos = mParticleSystem.getParticlePositionX(i);
-            minParticleX = ( pos < minParticleX ? pos: minParticleX );
-            maxParticleX = ( pos > maxParticleX ? pos: maxParticleX );
-
-            //Y座標
-            pos = mParticleSystem.getParticlePositionY(i);
-            minParticleY = ( pos < minParticleY ? pos: minParticleY );
-            maxParticleY = ( pos > maxParticleY ? pos: maxParticleY );
-        }
-
-        //最大幅と高さを算出
-        float particleMaxWidth = Math.abs(maxParticleX - minParticleX);
-        float particleMaxHeight = Math.abs(maxParticleY - minParticleY);
-
-        //UV座標データ
-        float minUvX      = mPlistManage.getUvMinX();
-        float maxUvY      = mPlistManage.getUvMaxY();
-        float UvMaxWidth  = mPlistManage.getUvWidth();
-        float UvMaxHeight = mPlistManage.getUvHeight();
-
-        //UV座標を計算し、バッファに保持する
-        for(int i: drawGroupParIndex){
-            float x = mParticleSystem.getParticlePositionX(i);
-            float y = mParticleSystem.getParticlePositionY(i);
-
-            float vecx = minUvX + ( (( x - minParticleX ) / particleMaxWidth)  * UvMaxWidth );
-            float vecy = maxUvY - ( (( y - minParticleY ) / particleMaxHeight) * UvMaxHeight );
-
-            drawGroupUv.add( new Vec2(vecx, vecy) );
-        }
+        //レンダリング用UVバッファを生成
+        generateUVRendererBuff();
 
         //境界粒子を保持
-        ArrayList<Integer> border = new ArrayList<Integer>();
-        if(mUserSelectHardness != MenuActivity.PictureButton.Break) {
-            ArrayList<Integer> line = new ArrayList<Integer>();
+        ArrayList<Integer> border = new ArrayList<>();
+        if (mUserSelectHardness != MenuActivity.PictureButton.Break) {
+            ArrayList<Integer> line;
 
             //行数分ループ
-            int line_num = row.size();
+            int line_num = allParticleLine.size();
             for (int i = 0; i < line_num; i++) {
-                line = row.get(i);
+                line = allParticleLine.get(i);
 
                 //下辺・上辺
                 if ((i == 0) || (i == line_num - 1)) {
@@ -689,22 +517,21 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         }
 
         int textureId;
-
-        if(mMode){
+        if (mMode) {
             //Create
             textureId = makeTextureSoftCreate(gl, R.drawable.create_test_0);
-        }else{
+        } else {
             //Picture
             textureId = makeTextureSoft(gl, resId);
         }
 
-        addParticleData(gl, mParticleSystem, pg, particleRadius, row, border, textureId);
+        addParticleData(gl, pg, particleRadius, allParticleLine, border, textureId);
     }
 
     /*
      *
      */
-    private void creParticleSystem(float particleRadius){
+    private void creParticleSystem(float particleRadius) {
         ParticleSystemDef psd = new ParticleSystemDef();
         psd.setRadius(particleRadius);
         psd.setDampingStrength(0.2f);
@@ -723,16 +550,16 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      * パーティクルグループ定義の設定
      * @para パーティクル横幅、パーティクル縦幅、生成位置(x/y)
      */
-    private void setParticleGroupDef(ParticleGroupDef pgd, float hx, float hy, float cx, float cy){
+    private void setParticleGroupDef(ParticleGroupDef pgd, float hx, float hy, float cx, float cy) {
 
-        if(true){
+        if (true) {
             PolygonShape shape = new PolygonShape();
             shape.setAsBox(hx, hy, 0, 0, 0);
             pgd.setShape(shape);
-        }else{
+        } else {
             //plistにある座標で図形を生成
             int shapenum = mPlistManage.setPlistBuffer(mMainGlView.getContext(), pgd, PlistDataManager.PLIST_KIND.PLIST_RABBIT);
-            if(shapenum == -1){
+            if (shapenum == -1) {
                 //取得エラーなら、終了
                 return;
             }
@@ -744,7 +571,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         pgd.setLifetime(mSetParticleLifetime);
 
         //!リファクタリング
-        if( mUserSelectHardness == MenuActivity.PictureButton.Break ){
+        if (mUserSelectHardness == MenuActivity.PictureButton.Break) {
             //生成位置をランダムに
             int offsetx = mRandom.nextInt(rangeCreateBreakX);
             int offsety = mRandom.nextInt(rangeCreateBreakY);
@@ -755,30 +582,267 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * 同一行のパーティクルによるバッファ生成
-     *  @para I:パーティクルシステム
      *  @para I:パーティクルグループ
-     *  @para O:行配列
+     *  @para O:全パーティクルライン
      */
-    private void setParticleGroupRow(ParticleSystem ps, ParticleGroup pg, ArrayList<ArrayList<Integer>> row){
-        //行ごとに保持
-        float py = 0;
-        ArrayList<Integer> line = new ArrayList<Integer>();
-        for (int i = pg.getBufferIndex(); i < pg.getParticleCount() - pg.getBufferIndex(); ++i) {
-            float y = ps.getParticlePositionY(i);
-            if (i==0) {
-                py = y;
+    private void generateParticleLineBuff(ParticleGroup pg, ArrayList<ArrayList<Integer>> allParticleLine) {
+
+        //対象のパーティクルグループのパーティクル数を算出
+        int bufferIndex = pg.getBufferIndex();
+        int groupParticleNum = pg.getParticleCount() - bufferIndex;
+
+        //先頭パーティクルのY座標を保持
+        float py = mParticleSystem.getParticlePositionY(bufferIndex);
+        ArrayList<Integer> line = new ArrayList<>();
+
+        for (int i = bufferIndex; i < groupParticleNum; ++i) {
+            //パーティクルのY座標
+            float y = mParticleSystem.getParticlePositionY(i);
+
+            //パーティクルが次のラインのものである場合
+            if ((float) Math.abs(py - y) > 0.01f) {
+                //パーティクル行を全パーティクルラインに追加し、新規ラインを生成
+                allParticleLine.add(line);
+                line = new ArrayList<>();
             }
 
-            //次の行に移ったかチェック
-            if ((float)Math.abs(py - y) > 0.01f) {
-                //行を新規にする
-                row.add(line);
-                line = new ArrayList<Integer>();
-            }
+            //ラインにパーティクルを追加し、Y座標を更新
             line.add(i);
             py = y;
         }
-        row.add(line);
+
+        //パーティクル行を全パーティクルラインに追加
+        allParticleLine.add(line);
+    }
+
+    /*
+     * レンダリング用バッファ生成：下辺側が底辺
+     *  @para I:ライン毎のパーティクルIndexバッファ
+     *  @para I:パーティクルの直径
+     *
+     * 　下辺が底辺、上辺が頂点となるように、三角形グループ単位でバッファに格納する
+     *
+     *  【バッファ生成イメージ】
+     * 　＜パーティクルイメージ＞
+     *    ⑩　⑪
+     *　　 ①　②　③
+     *
+     *  【バッファイメージ】
+     *    [0] [1] [2] [3] [4] [5]
+     *　　 ①  ②  ⑩   ②  ③  ⑪
+     */
+    private void generateBottomBaseRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+
+        //ループ数 = ライン数 - 1
+        int lastLineIndex = allParticleLine.size() - 1;
+        for (int lineIndex = 0; lineIndex < lastLineIndex; lineIndex++) {
+
+            //下辺と上辺（ある行とその上の行）
+            ArrayList<Integer> bottom_line = allParticleLine.get(lineIndex);
+            ArrayList<Integer> upper_line = allParticleLine.get(lineIndex + 1);
+
+            //ライン先頭に格納されている「パーティクルシステム側のIndex」
+            int bottom_top_ref_index = bottom_line.get(0);
+            int upper_top_ref_index = upper_line.get(0);
+
+            //ラインの最後のIndex（バッファ側のIndex）
+            int bottom_buf_end_index = bottom_line.size() - 1;
+            int upper_buf_end_index = upper_line.size() - 1;
+            for (int bottom_offset = 0; bottom_offset < bottom_buf_end_index; bottom_offset++) {
+
+                //参照するIndex（パーティクルシステム側のIndex）
+                int ref_index = bottom_top_ref_index + bottom_offset;
+
+                float bottom_left_x = mParticleSystem.getParticlePositionX(ref_index);
+                float bottom_right_x = mParticleSystem.getParticlePositionX(ref_index + 1);
+
+                //粒子が隣り合っていないなら、グルーピングしない(描画対象外)
+                if ((bottom_right_x - bottom_left_x) > diameter) {
+                    continue;
+                }
+
+                //上辺側に、三角形の頂点たりうる粒子があるかチェック(左からチェック)
+                int upper_offset;
+                float upper_x;
+                int belongs_col = -1;
+                int ref_upper_index = 0;
+                for (upper_offset = 0; upper_offset <= upper_buf_end_index; upper_offset++) {
+
+                    //参照するIndex（パーティクルシステム側のIndex）
+                    ref_upper_index = upper_top_ref_index + upper_offset;
+
+                    upper_x = mParticleSystem.getParticlePositionX(ref_upper_index);
+
+                    //下辺の左側の頂点の直上にあるかチェック
+                    if (upper_x == bottom_left_x) {
+                        belongs_col = bottom_offset;
+                        break;
+                    }
+
+                    //下辺の右側の頂点の直上にあるかチェック
+                    if (upper_x == bottom_right_x) {
+                        belongs_col = bottom_offset + 1;
+                        break;
+                    }
+                }
+
+                //頂点に適した粒子がないなら、グルーピングしない(描画対象外)
+                if (belongs_col == -1) {
+                    continue;
+                }
+
+                //3頂点を描画バッファに格納
+                mRenderParticleBuff.add(ref_index);        //底辺-左
+                mRenderParticleBuff.add(ref_index + 1);    //底辺-右
+                mRenderParticleBuff.add(ref_upper_index);  //頂点
+            }
+        }
+    }
+
+    /*
+     * レンダリング用バッファ生成：上辺側が底辺
+     *  @para I:ライン毎のパーティクルIndexバッファ
+     *  @para I:パーティクルの直径
+     *
+     * 　上辺が底辺、下辺が頂点となるように、三角形グループ単位でバッファに格納する
+     *
+     *  【バッファ生成イメージ】
+     * 　＜パーティクルイメージ＞
+     *    ⑩　⑪  ⑫
+     *　　 ①　②　③
+     *
+     *  【バッファイメージ】
+     *    [0] [1] [2] [3] [4] [5]
+     *　　 ⑩  ⑪  ②   ⑪   ⑫  ③
+     */
+    private void generateTopBaseRendererBuff(ArrayList<ArrayList<Integer>> allParticleLine, float diameter) {
+
+        //ループ数 = ライン数 - 1
+        int lastLineIndex = allParticleLine.size() - 1;
+        for (int lineIndex = lastLineIndex; lineIndex > 0; lineIndex--) {
+
+            //下辺と上辺（ある行とその下の行）
+            ArrayList<Integer> upper_line = allParticleLine.get(lineIndex);
+            ArrayList<Integer> bottom_line = allParticleLine.get(lineIndex - 1);
+
+            //List最後尾のIndex
+            int upper_buf_end_index = upper_line.size() - 1;
+            int bottom_buf_end_index = bottom_line.size() - 1;
+
+            //行の終端に位置するパーティクルIndex
+            int upper_end_ref_index = upper_line.get(upper_buf_end_index);
+            int bottom_end_ref_index = bottom_line.get(bottom_buf_end_index);
+
+            //行の右からチェックしていく
+            for (int upper_offset = 0; upper_offset < upper_buf_end_index; upper_offset++) {
+
+                //参照するIndex（パーティクルシステム側のIndex）右からみていくため、減算していく。
+                int ref_index = upper_end_ref_index - upper_offset;
+
+                float upper_right_x = mParticleSystem.getParticlePositionX(ref_index);
+                float upper_left_x = mParticleSystem.getParticlePositionX(ref_index - 1);
+
+                //粒子が隣り合っていないなら、グルーピングしない(描画対象外)
+                if ((upper_right_x - upper_left_x) > diameter) {
+                    continue;
+                }
+
+                //下辺側に、三角形の頂点たりうる粒子があるかチェック(右からチェック)
+                int bottom_offset;
+                float bottom_x;
+                int belongs_col = -1;
+                int ref_bottom_index = 0;
+                for (bottom_offset = 0; bottom_offset <= bottom_buf_end_index; bottom_offset++) {
+
+                    //参照するIndex（パーティクルシステム側のIndex）
+                    ref_bottom_index = bottom_end_ref_index - bottom_offset;
+
+                    bottom_x = mParticleSystem.getParticlePositionX(ref_bottom_index);
+
+                    //下辺の右側の頂点の直上にあるかチェック
+                    if (bottom_x == upper_right_x) {
+                        belongs_col = upper_buf_end_index - upper_offset;
+                        break;
+                    }
+
+                    //下辺の左側の頂点の直上にあるかチェック
+                    if (bottom_x == upper_left_x) {
+                        belongs_col = upper_buf_end_index - (upper_offset - 1);
+                        break;
+                    }
+                }
+
+                //頂点に適した粒子がないなら、グルーピングしない(描画対象外)
+                if (belongs_col == -1) {
+                    continue;
+                }
+
+                //3頂点をバッファに格納
+                mRenderParticleBuff.add(ref_index);
+                mRenderParticleBuff.add(ref_index - 1);
+                mRenderParticleBuff.add(ref_bottom_index);
+
+/*                if( ref_index >= 126 && ref_index <=128 ){
+                    Log.i("test", "drawGroupParIndex=\t" + ref_index);
+                    Log.i("test", "drawGroupParIndex=\t" + (ref_index - 1));
+                    Log.i("test", "drawGroupParIndex=\t" + ref_bottom_index);
+                    Log.i("test", "------------------");
+                }*/
+            }
+        }
+    }
+
+    /*
+     * レンダリング用UVバッファの生成
+     *  @para I:なし
+     */
+    private void generateUVRendererBuff(){
+
+        //-------------------------------------------------
+        // パーティクルグループ内の粒子で最小位置と最大位置を取得する
+        //-------------------------------------------------
+        float minParticleX = 0xFFFF;
+        float maxParticleX = -(0xFFFF);
+        float minParticleY = 0xFFFF;
+        float maxParticleY = -(0xFFFF);
+
+        int particleNum = mParticleSystem.getParticleCount();
+        for (int i = 0; i < particleNum; i++) {
+            //X座標
+            float pos = mParticleSystem.getParticlePositionX(i);
+            minParticleX = (Math.min(pos, minParticleX));
+            maxParticleX = (Math.max(pos, maxParticleX));
+
+            //Y座標
+            pos = mParticleSystem.getParticlePositionY(i);
+            minParticleY = (Math.min(pos, minParticleY));
+            maxParticleY = (Math.max(pos, maxParticleY));
+        }
+
+        //横幅・縦幅を算出
+        float particleMaxWidth = Math.abs(maxParticleX - minParticleX);
+        float particleMaxHeight = Math.abs(maxParticleY - minParticleY);
+
+        //-------------------------------------------------
+        // UV座標をバッファに格納
+        //-------------------------------------------------
+        //UV座標の最大・最小・横幅・縦幅
+        float minUvX = mPlistManage.getUvMinX();
+        float maxUvY = mPlistManage.getUvMaxY();
+        float UvMaxWidth = mPlistManage.getUvWidth();
+        float UvMaxHeight = mPlistManage.getUvHeight();
+
+        //UV座標を計算し、バッファに保持する
+        for (int i : mRenderParticleBuff) {
+            float x = mParticleSystem.getParticlePositionX(i);
+            float y = mParticleSystem.getParticlePositionY(i);
+
+            float vecx = minUvX + (((x - minParticleX) / particleMaxWidth) * UvMaxWidth);
+            float vecy = maxUvY - (((y - minParticleY) / particleMaxHeight) * UvMaxHeight);
+
+            //レンダリング用UVバッファに格納
+            mRenderUVBuff.add(new Vec2(vecx, vecy));
+        }
     }
 
     /*
@@ -996,8 +1060,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
             //パーティクルグループを削除(粒子とグループは次の周期で削除される)
             pg.destroyParticles();
-            drawGroupParIndex.clear();
-            drawGroupUv.clear();
+            mRenderParticleBuff.clear();
+            mRenderUVBuff.clear();
 
             //再生成のシーケンスを生成に更新(次の周期で生成するため)
             mRegenerationState = RegenerationState.CREATE;
@@ -1126,10 +1190,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         {
             //Index毎に現在の位置情報を取得・配列に格納
             float vertices[];
-            vertices = new float[drawVerNum * 2];
+            vertices = new float[mRenderPointNum * 2];
 
             int count = 0;
-            for( int index: drawGroupParIndex ){
+            for( int index: mRenderParticleBuff){
                 vertices[count] = ps.getParticlePositionX(index);
                 count++;
                 vertices[count] = ps.getParticlePositionY(index);
@@ -1138,10 +1202,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
             //UV座標配列
             float uv[];
-            uv = new float[drawVerNum * 2];
+            uv = new float[mRenderPointNum * 2];
 
             count = 0;
-            for( Vec2 Coordinate: drawGroupUv ){
+            for( Vec2 Coordinate: mRenderUVBuff){
                 uv[count] = Coordinate.getX();
                 count++;
                 uv[count] = Coordinate.getY();
@@ -1160,7 +1224,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //頂点バッファの指定
             gl.glVertexPointer(2, GL10.GL_FLOAT, 0, vertexBuffer);              //頂点座標を渡す
             //描画
-            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, drawVerNum);
+            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, mRenderPointNum);
         }
         //マトリクスを戻す
         gl.glPopMatrix();
@@ -1178,10 +1242,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         {
             //Index毎に現在の位置情報を取得・配列に格納
             float vertices[];
-            vertices = new float[drawVerNum * 2];
+            vertices = new float[mRenderPointNum * 2];
 
             int count = 0;
-            for( int index: drawGroupParIndex ){
+            for( int index: mRenderParticleBuff){
                 vertices[count] = ps.getParticlePositionX(index);
                 count++;
                 vertices[count] = ps.getParticlePositionY(index);
@@ -1190,10 +1254,10 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
             //UV座標配列
             float uv[];
-            uv = new float[drawVerNum * 2];
+            uv = new float[mRenderPointNum * 2];
 
             count = 0;
-            for( Vec2 Coordinate: drawGroupUv ){
+            for( Vec2 Coordinate: mRenderUVBuff){
                 uv[count] = Coordinate.getX();
                 count++;
                 uv[count] = Coordinate.getY();
@@ -1214,7 +1278,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             //頂点バッファの指定
             gl.glVertexPointer(2, GL10.GL_FLOAT, 0, vertexBuffer);              //頂点座標を渡す
             //描画
-            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, drawVerNum);
+            gl.glDrawArrays(GL10.GL_TRIANGLES, 0, mRenderPointNum);
         }
         //マトリクスを戻す
         gl.glPopMatrix();
