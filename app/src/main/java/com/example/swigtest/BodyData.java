@@ -4,7 +4,7 @@ import com.google.fpl.liquidfun.Body;
 
 import java.nio.FloatBuffer;
 
-import static com.example.swigtest.FluidWorldRenderer.makeFloatBuffer;
+import static com.example.swigtest.FluidWorldRenderer.convFloatBuffer;
 
 public class BodyData {
 
@@ -20,8 +20,8 @@ public class BodyData {
     public BodyData(long id, Body body, float[] buffer, float[] uv, int drawMode, int textureId) {
         this.id = id;
         this.body = body;
-        this.vertexBuffer = makeFloatBuffer(buffer);
-        this.uvBuffer = makeFloatBuffer(uv);
+        this.vertexBuffer = convFloatBuffer(buffer);
+        this.uvBuffer = convFloatBuffer(uv);
         this.vertexLen = buffer.length / 2;
         this.drawMode = drawMode;
         this.textureId = textureId;
