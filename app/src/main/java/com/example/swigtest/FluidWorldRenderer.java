@@ -120,8 +120,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private float menuWidth;
     private float menuHeight;
 
-
-    private boolean mGetMenuCorner = false;
+    //メニュー初期位置設定完了フラグ
+    private boolean mIsSetMenuInitPos = false;
 
     //アニメーションと一致するmenuの移動速度
     private Vec2 mMenuUpVelocity;
@@ -874,7 +874,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //初期化完了していれば
         if (glInitStatus == GLInitStatus.FinInit) {
             //メニューのサイズが設定されるまで、処理なし
-            if (!mGetMenuCorner && !mIsCreate) {
+            if (!mIsSetMenuInitPos && !mIsCreate) {
                 return false;
             }
 
@@ -2021,27 +2021,32 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * メニュービュー位置情報の設定
      */
-    public void reqSetMenuSize(CreateFluidWorldMenuActivity.FluidMenuKind kind, float top, float left, float right, float bottom, int ani_duration ){
+    public void reqSetMenuSize(CreateFluidWorldMenuActivity.FluidMenuState state, float top, float left, float right, float bottom, int duration ){
 
-        //メニュー本体のビュー位置情報を保持
-        if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.CONTENTS){
+        //-------------------------------
+        // メニューの位置座標を保持
+        //-------------------------------
+        if( state == CreateFluidWorldMenuActivity.FluidMenuState.EXPANDED){
+            //メニューが開いている状態の位置情報
             menuContentsTop = top;
             menuContentsLeft = left;
             menuContentsRight = right;
             menuContentsBottom = bottom;
-            menuUpAniDuration = ani_duration;
+            menuUpAniDuration = duration;
 
-        }else if( kind == CreateFluidWorldMenuActivity.FluidMenuKind.INIT){
+        } else if( state == CreateFluidWorldMenuActivity.FluidMenuState.COLLAPSED){
+            //メニューが閉じている状態の位置情報
             menuInitTop = top;
             menuInitLeft = left;
             menuInitRight = right;
             menuInitBottom = bottom;
-            menuDownAniDuration = ani_duration;
+            menuDownAniDuration = duration;
 
             //すべて取得したら、フラグを更新
-            mGetMenuCorner = true;
+            mIsSetMenuInitPos = true;
+
         }else{
-            /* 対象外 */
+            //対象外
         }
     }
 

@@ -30,10 +30,10 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
     private static final int MENU_UP_ANIMATION_DURATION = 400;
     private static final int MENU_DOWN_ANIMATION_DURATION = 200;
 
-    //パーティクル画面下部のメニュー
-    enum FluidMenuKind{
-        CONTENTS,
-        INIT
+    //パーティクル画面下部のメニュー状態
+    enum FluidMenuState {
+        COLLAPSED,      //閉じている状態
+        EXPANDED        //開いている状態
     }
 
     @Override
@@ -251,14 +251,14 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
         FluidWorldRenderer render = glView.getRenderer();
-        render.reqSetMenuSize(FluidMenuKind.CONTENTS, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_UP_ANIMATION_DURATION);
+        render.reqSetMenuSize(FluidMenuState.EXPANDED, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_UP_ANIMATION_DURATION);
 
         //メニュー下部
         LinearLayout menu_bottom = findViewById(R.id.bottom_menu_init);
         menu_bottom.getGlobalVisibleRect(menu_corners);
         menu_corners.offset(-globalOffset.x, -globalOffset.y);
 
-        render.reqSetMenuSize(FluidMenuKind.INIT, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_DOWN_ANIMATION_DURATION);
+        render.reqSetMenuSize(FluidMenuState.COLLAPSED, menu_corners.top, menu_corners.left, menu_corners.right, menu_corners.bottom, MENU_DOWN_ANIMATION_DURATION);
 
         //横幅を取得後、メニュー本体は隠す
         menu_top.setVisibility(View.INVISIBLE);
