@@ -23,7 +23,7 @@ import java.util.ArrayList;
  */
 public class CreateFluidWorldMenuActivity extends AppCompatActivity {
 
-    private MainGlView glView;
+    private FluidGLSurfaceView glView;
     private MyApplication app;
 
     //アニメーション時間(ms)
@@ -40,7 +40,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        app = (MyApplication)this.getApplication();
+        app = (MyApplication)getApplication();
         Bitmap bitmap                     = app.getObj();
         MenuActivity.PictureButton select = app.getSelect();
 
@@ -48,9 +48,10 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         if(select == MenuActivity.PictureButton.CreateDraw){
             touchList = app.getTouchList();
         }
-        //流体画面を生成
-        glView = new MainGlView(this, bitmap, select,  touchList );
 
+        //流体レンダリングビューを生成
+        glView = new FluidGLSurfaceView(this, bitmap, select,  touchList );
+        //レンダリングビューをレイアウトに追加
         setContentView(R.layout.activity_fluid_design);
         LinearLayout root = findViewById(R.id.gl_view_root);
         root.addView(glView);
@@ -68,9 +69,9 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
          */
 
         //画面下部のメニュー
-        findViewById(R.id.bottom_menu_init).setOnClickListener(new menuIniListerner());
+        findViewById(R.id.bottom_menu_init).setOnClickListener( new menuIniListerner() );
 
-
+        //別画像の選択
         findViewById(R.id.other_picture).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,6 +82,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }
         });
 
+        //流体再生成
         findViewById(R.id.regeneration).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,6 +107,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             }
         });
 
+        //メニュー画面に戻る
         findViewById(R.id.return_menu).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,24 +124,24 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
         }
     }
 
-    /**
+    /*
      * メニュー(初期：▲)のリスナー
      */
     private class menuIniListerner implements View.OnClickListener {
 
         //リスナー受付(初期値は受付OK)
-        public boolean enable = true;
+        public boolean mIsEnable = true;
 
         @Override
         public void onClick(View view) {
 
             //リスナー受付中でなければ、なにもしない
-            if(!this.enable){
+            if(!mIsEnable){
                 return;
             }
 
             //リスナーの処理を終えるまでは、受付不可にする
-            this.enable = false;
+            mIsEnable = false;
 
             //メニュー本体
             LinearLayout menu_contents = findViewById(R.id.bottom_menu_contents);
@@ -147,7 +150,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
             //表示非表示を制御
             if(menu_contents.getVisibility() != View.VISIBLE){
                 //メニュー本体処理
-                this.slide_up(menu_contents);
+                slide_up(menu_contents);
                 glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.UP);
 
                 //説明文のアニメーション表示
@@ -157,7 +160,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
 
             }else{
                 //メニュー本体処理
-                this.slide_down(menu_contents);
+                slide_down(menu_contents);
                 glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.DOWN);
 
                 //説明文のアニメーション非表示
@@ -189,7 +192,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                     glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
 
                     //アニメーションが終了すれば、受付可能にする
-                    enable = true;
+                    mIsEnable = true;
                 }
                 @Override
                 public void onAnimationRepeat(Animation animation) {
@@ -223,7 +226,7 @@ public class CreateFluidWorldMenuActivity extends AppCompatActivity {
                     glView.getRenderer().reqMenuMove(FluidWorldRenderer.MenuMoveControl.STOP);
 
                     //アニメーションが終了すれば、受付可能にする
-                    enable = true;
+                    mIsEnable = true;
                 }
                 @Override
                 public void onAnimationRepeat(Animation animation) {

@@ -1,67 +1,63 @@
 package com.example.swigtest;
 
-import android.test.SingleLaunchActivityTestCase;
-
 import com.google.fpl.liquidfun.ParticleGroup;
 import com.google.fpl.liquidfun.ParticleSystem;
 
 import java.util.ArrayList;
 
 public class ParticleData {
-    long id;
+    long mID;
     //ParticleSystem particleSystem;
-    ParticleGroup particleGroup;
-    float particleRadius;           //設定したradius
-    float particleRadiusReal;      //実際の初期配置位置から計算したradius
-    int textureId;
-    ArrayList<Integer> textureIdList;
-    ArrayList<ArrayList<Integer>> row;
-    ArrayList<Integer> border;          //境界粒子
+    ParticleGroup mParticleGroup;
+    float mParticleRadius;                          //設定したradius
+    float mParticleActualRadius;                    //初期配置位置から計算したradius
+    int mTextureId;
+    ArrayList<Integer> mTextureIdList;
+    ArrayList<ArrayList<Integer>> mAllParticleLine; //ライン毎のパーティクルIndexリスト
+    ArrayList<Integer> mBorderParticle;             //境界粒子
 
-    public ParticleData(long id, ParticleSystem ps, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> row, ArrayList<Integer> border, int textureId) {
-        this.id = id;
-        this.particleGroup = pg;
-        this.textureId = textureId;
-        this.particleRadius = particleRadius;
-        this.row = row;
-        this.border = border;
+    public ParticleData(long id, ParticleSystem ps, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
+        mID = id;
+        mParticleGroup = pg;
+        mTextureId = textureId;
+        mParticleRadius = particleRadius;
+        mAllParticleLine = allParticleLine;
+        mBorderParticle = border;
 
-        this.particleRadiusReal = (ps.getParticlePositionX(1) - ps.getParticlePositionX(0)) / 2;
+        mParticleActualRadius = (ps.getParticlePositionX(1) - ps.getParticlePositionX(0)) / 2;
     }
 
     public long getId() {
-        return this.id;
+        return mID;
     }
 
     public ParticleGroup getParticleGroup() {
-        return particleGroup;
+        return mParticleGroup;
     }
-
     public void setParticleGroup(ParticleGroup particleGroup) {
-        this.particleGroup = particleGroup;
+        mParticleGroup = particleGroup;
     }
 
-    public int getTextureId() { return this.textureId;}
+    public int getTextureId() { return mTextureId;}
 
-    public float getParticleRadius() { return this.particleRadius;}
+    public ArrayList<Integer> getTextureIdList() {
+        return mTextureIdList;
+    }
+    public void setTextureIdList(ArrayList<Integer> textureIdList) {
+        mTextureIdList = textureIdList;
+    }
 
-    public float getParticleRadiusReal() { return this.particleRadiusReal;}
+    public float getParticleRadius() { return mParticleRadius;}
 
-    public ArrayList<ArrayList<Integer>> getRow() { return this.row;}
+    public float getParticleActualRadius() { return mParticleActualRadius;}
 
-    public void setRow(ArrayList<ArrayList<Integer>> row) {
-        this.row = row;
+    public ArrayList<ArrayList<Integer>> getAllParticleLine() { return mAllParticleLine;}
+    public void setAllParticleLine(ArrayList<ArrayList<Integer>> allParticleLine) {
+        mAllParticleLine = allParticleLine;
     }
 
     public ArrayList<Integer> getBorder() {
-        return border;
+        return mBorderParticle;
     }
 
-    public ArrayList<Integer> getTextureIdList() {
-        return textureIdList;
-    }
-
-    public void setTextureIdList(ArrayList<Integer> textureIdList) {
-        this.textureIdList = textureIdList;
-    }
 }

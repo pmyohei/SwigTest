@@ -16,7 +16,7 @@ import android.widget.Button;
 @SuppressLint("ValidFragment")
 public class FlickFigureFragment extends Fragment {
 
-    private MainGlView glView;
+    private FluidGLSurfaceView glView;
     private GestureDetector gesDetectBox;
     private GestureDetector gesDetectTriangle;
     private GestureDetector gesDetectCircle;
@@ -24,7 +24,7 @@ public class FlickFigureFragment extends Fragment {
     private float mTrianglePosOffset;
     private float mCirclePosOffset;
 
-    public FlickFigureFragment(MainGlView para){
+    public FlickFigureFragment(FluidGLSurfaceView para){
         glView = para;
     }
 

@@ -36,7 +36,7 @@ import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
 /*
- * 流体の生成・レンダリング
+ * 物理世界で流体生成・レンダリング
  */
 public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchListener {
 
@@ -132,7 +132,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     private MenuMoveControl mMenuMove = MenuMoveControl.NOTHING;
 
     /* OpenGL */
-    private MainGlView mMainGlView;
+    private FluidGLSurfaceView mMainGlView;
     private Bitmap mUserSelectBmp;
     private GLInitStatus glInitStatus = GLInitStatus.PreInit;
 
@@ -228,7 +228,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * コンストラクタ
      */
-    public FluidWorldRenderer(MainGlView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
+    public FluidWorldRenderer(FluidGLSurfaceView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mMainGlView = mainGlView;
         mUserSelectBmp = bmp;
 //        mUserSelectHardness = select;
@@ -315,8 +315,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     /*
      * パーティクル情報の追加
      */
-    private void addParticleData(GL10 gl, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> row, ArrayList<Integer> border, int textureId) {
-        mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, row, border, textureId);
+    private void addParticleData(GL10 gl, ParticleGroup pg, float particleRadius, ArrayList<ArrayList<Integer>> allParticleLine, ArrayList<Integer> border, int textureId) {
+        mParticleData = new ParticleData(0, mParticleSystem, pg, particleRadius, allParticleLine, border, textureId);
 
         //-----------------------
         // お試し：Createのみ
@@ -1147,8 +1147,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         //マトリクス記憶
         gl.glPushMatrix();
         {
-            ArrayList<ArrayList<Integer>> row = mParticleData.getRow();
-            float radiusReal = mParticleData.getParticleRadiusReal();
+            ArrayList<ArrayList<Integer>> row = mParticleData.getAllParticleLine();
+            float radiusReal = mParticleData.getParticleActualRadius();
 
             //行数 - 1
             int row_size = row.size();
@@ -1941,7 +1941,8 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
     }
 
     /*
-     * 粒子に対するタッチ状態を確認
+     * パーティクルタッチ追随処理
+     *   パーティクルに対するタッチ判定を行い、タッチされていればパーティクルを追随させる
      */
     private void traceTouchParticle(GL10 gl) {
 
@@ -2058,18 +2059,14 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
         if( control == MenuMoveControl.UP){
             //上方向を保持
             mMenuVelocity = mMenuUpVelocity;
-
-            Log.i("test", "reqMenuMove UP");
-
+            //Log.i("test", "reqMenuMove UP");
         }else if( control == MenuMoveControl.DOWN ){
             // 下方向を保持
             mMenuVelocity = mMenuDownVelocity;
-
-            Log.i("test", "reqMenuMove DOWN");
-
+            //Log.i("test", "reqMenuMove DOWN");
         }else{
             //do nothing
-            Log.i("test", "reqMenuMove STOP");
+            //Log.i("test", "reqMenuMove STOP");
         }
 
         //制御情報を保持

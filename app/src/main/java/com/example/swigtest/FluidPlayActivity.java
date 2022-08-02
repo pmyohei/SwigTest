@@ -18,7 +18,7 @@ import com.astuetz.PagerSlidingTabStrip;
 
 public class FluidPlayActivity extends AppCompatActivity {
 
-    private MainGlView glView;
+    private FluidGLSurfaceView glView;
     private MyApplication app;
 
     @Override
@@ -30,7 +30,7 @@ public class FluidPlayActivity extends AppCompatActivity {
         MenuActivity.PictureButton select = app.getSelect();
 
         //流体画面を生成
-        glView = new MainGlView(this, bitmap, select, null);
+        glView = new FluidGLSurfaceView(this, bitmap, select, null);
         //setContentView(glView);
         setContentView(R.layout.activity_fluid_play);
         LinearLayout root = findViewById(R.id.gl_view_root);

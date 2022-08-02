@@ -202,12 +202,12 @@ public class PlistDataManager {
             //座標内の最小値と最大値を保持する
             if( (i % 2) == 0 ){
                 //X座標
-                xMin = ( value < xMin ? value : xMin);
-                xMax = ( value > xMax ? value : xMax);
+                xMin = (Math.min(value, xMin));
+                xMax = (Math.max(value, xMax));
             }else{
                 //Y座標
-                yMin = ( value < yMin ? value : yMin);
-                yMax = ( value > yMax ? value : yMax);
+                yMin = (Math.min(value, yMin));
+                yMax = (Math.max(value, yMax));
             }
         }
 

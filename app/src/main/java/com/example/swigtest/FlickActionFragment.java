@@ -12,9 +12,9 @@ import android.widget.Button;
 @SuppressLint("ValidFragment")
 public class FlickActionFragment extends Fragment {
 
-    private MainGlView glView;
+    private FluidGLSurfaceView glView;
 
-    public FlickActionFragment(MainGlView para){
+    public FlickActionFragment(FluidGLSurfaceView para){
         glView = para;
     }
 

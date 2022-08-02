@@ -25,7 +25,7 @@ public class CreateDrawFluidActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_draw);
 
-        app = (MyApplication)this.getApplication();
+        app = (MyApplication)getApplication();
 
         //ペイント画面
         mPaintView = new PaintView(this);

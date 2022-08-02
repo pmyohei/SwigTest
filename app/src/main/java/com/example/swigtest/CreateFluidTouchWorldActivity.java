@@ -10,15 +10,13 @@ import android.widget.LinearLayout;
  */
 public class CreateFluidTouchWorldActivity extends AppCompatActivity {
 
-    private MainGlView glView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create);
 
         //流体画面を生成
-        glView = new MainGlView(this, null, MenuActivity.PictureButton.Soft, null);
+        FluidGLSurfaceView glView = new FluidGLSurfaceView(this, null, MenuActivity.PictureButton.Soft, null);
 
         LinearLayout root = findViewById(R.id.gl_view_root);
         root.addView(glView);
