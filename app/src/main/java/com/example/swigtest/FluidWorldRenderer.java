@@ -133,7 +133,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /* OpenGL */
     private FluidGLSurfaceView mMainGlView;
-    private Bitmap mUserSelectBmp;
+    private Bitmap mUserSelectImage;
     private GLInitStatus glInitStatus = GLInitStatus.PreInit;
 
     private HashMap<Integer, Integer> mMapResIdToTextureId = new HashMap<Integer, Integer>();
@@ -230,7 +230,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
      */
     public FluidWorldRenderer(FluidGLSurfaceView mainGlView, Bitmap bmp, MenuActivity.PictureButton select, ArrayList<Vec2> touchList) {
         mMainGlView = mainGlView;
-        mUserSelectBmp = bmp;
+        mUserSelectImage = bmp;
 //        mUserSelectHardness = select;
 
         //!リファクタリング
@@ -506,7 +506,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
             textureId = makeTextureSoftCreate(gl, R.drawable.create_test_0);
         } else {
             //Pictureモード
-            textureId = makeTextureSoft(gl, resId);
+            textureId = makeParticleTexture(gl, resId);
         }
 
         //パーティクル情報の追加
@@ -1777,9 +1777,9 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * テクスチャの生成(パーティクル用)
-     * テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
+     * テクスチャは、画面遷移時に指定されたBitmapを対象にする。
      */
-    private int makeTextureSoft(GL10 gl10, int resId) {
+    private int makeParticleTexture(GL10 gl10, int resId) {
         Integer texId = mMapResIdToTextureId.get(resId);
         if (texId != null) {
             return texId;
@@ -1787,12 +1787,12 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
         //テクスチャのメモリ確保
         int[] textureIds = new int[1];                  //テクスチャは一つ
-        gl10.glGenTextures(1, textureIds, 0);   //テクスチャオブジェクトの生成。para2にIDが納められる。
+        gl10.glGenTextures(1, textureIds, 0);     //テクスチャオブジェクトの生成。para2にIDが納められる。
 
         //テクスチャへのビットマップ指定
-        gl10.glActiveTexture(GL10.GL_TEXTURE0);                                     //テクスチャユニットを選択
-        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);                      //テクスチャIDとGL_TEXTURE_2Dをバインド
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, mUserSelectBmp, 0);    //バインドされたテクスチャにBitmapをセットする
+        gl10.glActiveTexture(GL10.GL_TEXTURE0);                                         //テクスチャユニットを選択
+        gl10.glBindTexture(GL10.GL_TEXTURE_2D, textureIds[0]);                          //テクスチャIDとGL_TEXTURE_2Dをバインド
+        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, mUserSelectImage, 0);     //バインドされたテクスチャにBitmapをセットする
 
         //テクスチャのフィルタ指定
         gl10.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
@@ -1805,7 +1805,7 @@ public class FluidWorldRenderer implements GLSurfaceView.Renderer, View.OnTouchL
 
     /*
      * テクスチャの生成(パーティクル用)
-     * テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
+     *   テクスチャは、引数ではなく画面遷移時に指定されたBitmapを対象にする。
      */
     private int makeTextureSoftCreate(GL10 gl10, int resId) {
         Integer texId = mMapResIdToTextureId.get(resId);

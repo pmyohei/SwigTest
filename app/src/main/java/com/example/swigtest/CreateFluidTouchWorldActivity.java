@@ -15,9 +15,9 @@ public class CreateFluidTouchWorldActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create);
 
-        //流体画面を生成
+        //流体世界の描画ビューを生成
         FluidGLSurfaceView glView = new FluidGLSurfaceView(this, null, MenuActivity.PictureButton.Soft, null);
-
+        //レイアウトに追加
         LinearLayout root = findViewById(R.id.gl_view_root);
         root.addView(glView);
     }
